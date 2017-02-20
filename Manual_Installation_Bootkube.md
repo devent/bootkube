@@ -35,10 +35,10 @@ The following instructions need to be performed on all three nodes:
 
 [Service]  
 Environment="ETCD_IMAGE_TAG=v3.1.0"  
-Environment="ETCD_NAME=<name>"  
+Environment="ETCD_NAME=$NAME"  
 Environment="ETCD_INITIAL_CLUSTER=node1=http://10.104.100.236:2380,node2=http://10.104.100.245:2380,node3=http://10.104.100.229:2380"  
-Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://<node_ip>:2380"  
-Environment="ETCD_ADVERTISE_CLIENT_URLS=http://<node_ip>:2379"  
+Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://$NODE_IP:2380"  
+Environment="ETCD_ADVERTISE_CLIENT_URLS=http://$NODE_IP:2379"  
 Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"  
 Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"  
 
