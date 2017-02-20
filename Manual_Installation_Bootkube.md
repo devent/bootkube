@@ -1,19 +1,48 @@
 # Manual installation of Kubernetes with Bootkube  
 
-This document describes the steps to manually install Kubernetes with the help of [Bootkube](https://github.com/kubernetes-incubator/bootkube) on the following systems:
-* prod00kube01.ams01.service.moovel.ibm.com
-* prod00kube02.ams01.service.moovel.ibm.com
-* prod00kube03.ams01.service.moovel.ibm.com
+This document describes the steps to manually install Kubernetes with the help of [Bootkube](https://github.com/kubernetes-incubator/bootkube) on systems:
+
+* prod00kube01.ams01.service.moovel.ibm.com - name node1 - IP 10.104.100.236 - public IP 37.58.99.228
+* prod00kube02.ams01.service.moovel.ibm.com - name node2 - IP 10.104.100.245 - public IP 37.58.99.235
+* prod00kube03.ams01.service.moovel.ibm.com - name node3 - IP 10.104.100.239 - public IP 37.58.99.238
 
 On all three systems Container Linux is already installed. In addition, all three systems acts as:
+
 * etcd server and
 * Kubernetes master
 
 The result is a high available Kubernetes cluster consisting of three nodes.
 
-## Getting Started
+## Prerequisites
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+In the scope of this document etcd3 will be used. Etcd will run on each node as a rkt container. Unfortunately. the corresponding controll utility must be installed manually as it is not part of Container Linux yet. The instructions are given here [install_etcdctl](https://github.com/coreos/etcd/releases/):
 
-### Prerequisites
+* ETCD_VER=v3.1.1
+* DOWNLOAD_URL=https://github.com/coreos/etcd/releases/download
+* curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+* mkdir -p /tmp/test-etcd && tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/test-etcd --strip-components=1
+* mkdir -p /root/bin
+* cp /tmp/test-etcd/etcdctl /root/bin
+* /root/bin/etcdctl --version
+
+
+## Configure etcd on all three nodes
+
+The following instructions need to be performed on all three nodes:
+
+* mkdir -p /etc/systemd/system/etcd-member.service.d
+* vim /etc/systemd/system/etcd-member.service.d/10-etcd-member.conf
+
+[Service]
+Environment="ETCD_IMAGE_TAG=v3.1.0"
+Environment="ETCD_NAME=<name>"
+Environment="ETCD_INITIAL_CLUSTER=node1=http://10.104.100.236:2380,node2=http://10.104.100.245:2380,node3=http://10.104.100.229:2380"
+Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://<node_ip>:2380"
+Environment="ETCD_ADVERTISE_CLIENT_URLS=http://<node_ip>:2379"
+Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
+Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
+
+* systemctl-daemon-reload
+* systemctl enable etcd-member
+* systemctl start etcd-member
 
