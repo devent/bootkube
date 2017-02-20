@@ -61,9 +61,11 @@ c6fb521b071b603c, started, node3, http://10.104.100.239:2380, http://10.104.100.
 
 ## Install Kubernetes with the help of Bootkube
 
+### Create assets for Kubernetes
+
 In this scenario a self signed certificate authority, automatically created by Bootkube, will be used. The integration of an existing CA is not part of this document.
 
-Log into prod00kube01 and execute the following steps and use Bootkube to create the required assets (kubeconfig, manifests and certificates) for the Kubernetes environment
+Log into prod00kube01 and execute the following steps and use Bootkube to create the required assets (kubeconfig, manifests and certificates) for the Kubernetes environment. If you want access the Kubernetes API server via a public IP address (37.x.x.x) you have to add the corresponding IP addresses here.
 
 * /usr/bin/rkt run \  
         --volume home,kind=host,source=/home/core \  
@@ -72,4 +74,61 @@ Log into prod00kube01 and execute the following steps and use Bootkube to create
 	--exec /bootkube -- render \  
 	--asset-dir=/core/assets \  
 	--api-servers=https://10.100.104.236:443,https://37.58.99.228:443,https://10.104.100.245:443,https://37.58.99.235:443,https://10.104.100.239:443,https://37.58.99.238:443 \  
-	--etcd-servers=http://10.104.100.236:2379,http://10.104.100.245:2379,http://10.104.100.239:2379
+	--etcd-servers=http://10.104.100.236:2379,http://10.104.100.245:2379,http://10.104.100.239:2379  
+* chown -R core:core /home/core/assets
+* mkdir -p /etc/kubernetes
+* cp /home/core/assets/auth/kubeconfig /etc/kubernetes/
+
+### Configure and start Kubelet service
+
+* vim /etc/systemd/system/kubelet.service
+
+[Service]  
+Environment=KUBELET_ACI=quay.io/coreos/hyperkube  
+Environment=KUBELET_VERSION=v1.5.3_coreos.0
+Environment="RKT_OPTS=\  
+--volume etc-resolv,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv,target=/etc/resolv.conf \  
+--volume var-lib-cni,kind=host,source=/var/lib/cni --mount volume=var-lib-cni,target=/var/lib/cni"  
+EnvironmentFile=/etc/environment  
+ExecStartPre=/bin/mkdir -p /etc/kubernetes/manifests  
+ExecStartPre=/bin/mkdir -p /etc/kubernetes/cni/net.d  
+ExecStartPre=/bin/mkdir -p /etc/kubernetes/checkpoint-secrets  
+ExecStartPre=/bin/mkdir -p /srv/kubernetes/manifests  
+ExecStartPre=/bin/mkdir -p /var/lib/cni  
+ExecStart=/usr/lib/coreos/kubelet-wrapper \  
+  --kubeconfig=/etc/kubernetes/kubeconfig \  
+  --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubeconfig \  
+  --cert-dir=/etc/kubernetes/secrets \  
+  --require-kubeconfig \  
+  --cni-conf-dir=/etc/kubernetes/cni/net.d \  
+  --network-plugin=cni \  
+  --lock-file=/var/run/lock/kubelet.lock \  
+  --exit-on-lock-contention \  
+  --allow-privileged \  
+  --hostname-override=$NODE_IP \  
+  --node-labels=master=true \  
+  --minimum-container-ttl-duration=3m0s \  
+  --cluster_dns=10.3.0.10 \  
+  --cluster_domain=cluster.local \  
+  --config=/etc/kubernetes/manifests  
+
+Restart=always  
+RestartSec=5  
+
+[Install]  
+WantedBy=multi-user.target  
+
+* systemctl daemon-reload
+* systemctl enable kubelet
+* systemctl start kubelet
+
+
+### Start the Bootkube based provisioning of Kuberetes
+
+* /usr/bin/rkt run \  
+        --volume home,kind=host,source=/home/core \  
+        --mount volume=home,target=/core \  
+        --net=host quay.io/coreos/bootkube \  
+	--exec /bootkube -- start --asset-dir=/core/assets  
+
+
