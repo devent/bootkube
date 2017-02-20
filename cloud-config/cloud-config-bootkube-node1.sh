@@ -112,6 +112,10 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF  
 
+systemctl daemon-reload
+systemctl enable kubelet
+systemctl start kubelet
+
 # Start Bootkube based provisioning of Kubernetes
 /usr/bin/rkt run \
   --volume home,kind=host,source=/home/core \
