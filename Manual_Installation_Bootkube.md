@@ -162,18 +162,19 @@ The assets created by Bootkube need to be copied to additional master nodes:
 * scp -r /home/core/assets core@prod00kube02.ams01.service.moovel.ibm.com:
 * scp -r /home/core/assets core@prod00kube03.ams01.service.moovel.ibm.com:
 
-Perform the following steps on both nodes:
+Perform the following steps on both nodes:  
+
 * mkdir /etc/kubernetes
 * cp /home/core/assets/auth/kubeconfig /etc/kubernetes
 * vim /etc/systemd/system/kubelet.service (see above for the content)
 * systemctl daemon-reload
 * systemctl enable kubelet
 * systemctl start kubelet
-* /usr/bin/rkt run \
-        --volume home,kind=host,source=/home/core \
-        --mount volume=home,target=/core \
-        --net=host quay.io/coreos/bootkube:v0.3.7 \
-        --exec /bootkube -- start --asset-dir=/core/assets
+* /usr/bin/rkt run \  
+        --volume home,kind=host,source=/home/core \  
+        --mount volume=home,target=/core \  
+        --net=host quay.io/coreos/bootkube:v0.3.7 \  
+        --exec /bootkube -- start --asset-dir=/core/assets  
 
 
 
