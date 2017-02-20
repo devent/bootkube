@@ -25,6 +25,11 @@ In the scope of this document etcd3 will be used. Etcd will run on each node as 
 * cp /tmp/test-etcd/etcdctl /root/bin
 * /root/bin/etcdctl --version
 
+Next, download the Kubernetes command utility into the same directory:
+
+* cd /root/bin
+* curl -O https://storage.googleapis.com/kubernetes-release/release/v1.5.2/bin/linux/amd64/kubectl
+* chmod +x kubectl
 
 ## Configure etcd on all three nodes
 
@@ -69,7 +74,7 @@ Log into prod00kube01 and execute the following steps and use Bootkube to create
 
 * /usr/bin/rkt run \  
         --volume home,kind=host,source=/home/core \  
-        --mount volume=home,target=/core \
+        --mount volume=home,target=/core \  
         --trust-keys-from-https --net=host quay.io/coreos/bootkube:v0.3.7 \  
 	--exec /bootkube -- render \  
 	--asset-dir=/core/assets \  
@@ -128,7 +133,25 @@ WantedBy=multi-user.target
 * /usr/bin/rkt run \  
         --volume home,kind=host,source=/home/core \  
         --mount volume=home,target=/core \  
-        --net=host quay.io/coreos/bootkube \  
+        --net=host quay.io/coreos/bootkube:v0.3.7 \  
 	--exec /bootkube -- start --asset-dir=/core/assets  
 
+
+After a few minutes Bootkube should report:  _italic_ All self-hosted control plane components successfully started *italic*
+You can verify the installation with kubectl:  
+/root/bin/kubectl --kubeconfig=/etc/kubernetes/kubeconfig get pods -n=kube-system
+
+The output should be similar to this one:
+
+NAME                                       READY     STATUS    RESTARTS   AGE  
+checkpoint-installer-kwsj7                 1/1       Running   0          4m  
+kube-apiserver-ww5bp                       1/1       Running   2          4m  
+kube-controller-manager-2426318746-lg84k   1/1       Running   0          4m  
+kube-controller-manager-2426318746-qk8wm   1/1       Running   0          4m  
+kube-dns-4101612645-twgt4                  4/4       Running   0          4m  
+kube-flannel-kb3k2                         2/2       Running   0          4m  
+kube-proxy-k2562                           1/1       Running   0          4m  
+kube-scheduler-2947727816-d7x93            1/1       Running   0          4m  
+kube-scheduler-2947727816-hp104            1/1       Running   0          4m  
+pod-checkpointer-10.104.100.236            1/1       Running   1          4m  
 
