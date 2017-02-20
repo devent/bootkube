@@ -21,15 +21,14 @@ In the scope of this document etcd3 will be used. Etcd will run on each node as 
 * DOWNLOAD_URL=https://github.com/coreos/etcd/releases/download
 * curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
 * mkdir -p /tmp/test-etcd && tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/test-etcd --strip-components=1
-* mkdir -p /root/bin
-* cp /tmp/test-etcd/etcdctl /root/bin
-* /root/bin/etcdctl --version
+* mkdir -p /home/core/bin
+* cp /tmp/test-etcd/etcdctl /home/core/bin
+* /home/core/bin/etcdctl --version
 
 Next, download the Kubernetes command utility into the same directory:
 
-* cd /root/bin
-* curl -O https://storage.googleapis.com/kubernetes-release/release/v1.5.2/bin/linux/amd64/kubectl
-* chmod +x kubectl
+* curl https://storage.googleapis.com/kubernetes-release/release/v1.5.2/bin/linux/amd64/kubectl > /home/core/bin/kubectl
+* chmod +x /home/core/bin/kubectl
 
 Distribute your ssh key to all nodes, such that you can copy files from and to nodes.
 
@@ -57,7 +56,7 @@ Acitvate the corresponding systemd service:
 
 With the following command you can verify if all node participate in the etcd cluster:
 
-ETCDCTL_API=3 /root/bin/etcdctl member list
+ETCDCTL_API=3 /home/core/bin/etcdctl member list
 
 The output should look like:
 
@@ -139,7 +138,7 @@ WantedBy=multi-user.target
 
 After a few minutes Bootkube should report:  _italic_ All self-hosted control plane components successfully started *italic*
 You can verify the installation with kubectl:  
-/root/bin/kubectl --kubeconfig=/etc/kubernetes/kubeconfig get pods -n=kube-system
+/home/core/bin/kubectl --kubeconfig=/etc/kubernetes/kubeconfig get pods -n=kube-system
 
 The output should be similar to this one:
 
