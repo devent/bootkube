@@ -33,14 +33,14 @@ The following instructions need to be performed on all three nodes:
 * mkdir -p /etc/systemd/system/etcd-member.service.d
 * vim /etc/systemd/system/etcd-member.service.d/10-etcd-member.conf
 
-[Service]
-Environment="ETCD_IMAGE_TAG=v3.1.0"
-Environment="ETCD_NAME=<name>"
-Environment="ETCD_INITIAL_CLUSTER=node1=http://10.104.100.236:2380,node2=http://10.104.100.245:2380,node3=http://10.104.100.229:2380"
-Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://<node_ip>:2380"
-Environment="ETCD_ADVERTISE_CLIENT_URLS=http://<node_ip>:2379"
-Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
-Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
+[Service]  
+Environment="ETCD_IMAGE_TAG=v3.1.0"  
+Environment="ETCD_NAME=<name>"  
+Environment="ETCD_INITIAL_CLUSTER=node1=http://10.104.100.236:2380,node2=http://10.104.100.245:2380,node3=http://10.104.100.229:2380"  
+Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://<node_ip>:2380"  
+Environment="ETCD_ADVERTISE_CLIENT_URLS=http://<node_ip>:2379"  
+Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"  
+Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"  
 
 * systemctl-daemon-reload
 * systemctl enable etcd-member
