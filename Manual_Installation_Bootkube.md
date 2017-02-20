@@ -73,7 +73,7 @@ Log into prod00kube01 and execute the following steps and use Bootkube to create
         --trust-keys-from-https --net=host quay.io/coreos/bootkube:v0.3.7 \  
 	--exec /bootkube -- render \  
 	--asset-dir=/core/assets \  
-	--api-servers=https://10.100.104.236:443,https://37.58.99.228:443,https://10.104.100.245:443,https://37.58.99.235:443,https://10.104.100.239:443,https://37.58.99.238:443 \  
+	--api-servers=https://10.104.100.236:443,https://37.58.99.228:443,https://10.104.100.245:443,https://37.58.99.235:443,https://10.104.100.239:443,https://37.58.99.238:443 \  
 	--etcd-servers=http://10.104.100.236:2379,http://10.104.100.245:2379,http://10.104.100.239:2379  
 * chown -R core:core /home/core/assets
 * mkdir -p /etc/kubernetes
