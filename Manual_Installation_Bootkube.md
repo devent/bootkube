@@ -58,3 +58,20 @@ The output should look like:
 c1bc8c19990923cc, started, node1, http://10.104.100.236:2380, http://10.104.100.236:2379  
 c6fb521b071b603c, started, node3, http://10.104.100.239:2380, http://10.104.100.239:2379  
 
+
+## Install Kubernetes with the help of Bootkube
+
+In this scenario a self signed certificate authority, automatically created by Bootkube, will be used. The integration of an existing CA is not part of this document.
+
+Log into prod00kube01 and execute the following steps:
+
+* Use Bootkube to create the required assets (kubeconfig, manifests and certificates) for the Kubernetes environement
+
+/usr/bin/rkt run \  
+        --volume home,kind=host,source=/home/core \  
+        --mount volume=home,target=/core \
+        --trust-keys-from-https --net=host quay.io/coreos/bootkube:v0.3.7 \  
+	--exec /bootkube -- render \  
+	--asset-dir=/core/assets \  
+	--api-servers=https://10.100.104.236:443,https://37.58.99.228:443,https://10.104.100.245:443,https://37.58.99.235:443,https://10.104.100.239:443,https://37.58.99.238:443" \  
+	--etcd-servers=http://10.104.100.236:2379,http://10.104.100.245:2379,http://10.104.100.239:2379
