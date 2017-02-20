@@ -31,6 +31,8 @@ Next, download the Kubernetes command utility into the same directory:
 * curl -O https://storage.googleapis.com/kubernetes-release/release/v1.5.2/bin/linux/amd64/kubectl
 * chmod +x kubectl
 
+Distribute your ssh key to all nodes, such that you can copy files from and to nodes.
+
 ## Configure etcd on all three nodes
 
 The following instructions need to be performed on all three nodes:
@@ -62,7 +64,6 @@ The output should look like:
 25184f9de106ed62, started, node2, http://10.104.100.245:2380, http://10.104.100.245:2379  
 c1bc8c19990923cc, started, node1, http://10.104.100.236:2380, http://10.104.100.236:2379  
 c6fb521b071b603c, started, node3, http://10.104.100.239:2380, http://10.104.100.239:2379  
-
 
 ## Install Kubernetes with the help of Bootkube
 
@@ -127,7 +128,6 @@ WantedBy=multi-user.target
 * systemctl enable kubelet
 * systemctl start kubelet
 
-
 ### Start the Bootkube based provisioning of Kuberetes
 
 * /usr/bin/rkt run \  
@@ -154,4 +154,27 @@ kube-proxy-k2562                           1/1       Running   0          4m
 kube-scheduler-2947727816-d7x93            1/1       Running   0          4m  
 kube-scheduler-2947727816-hp104            1/1       Running   0          4m  
 pod-checkpointer-10.104.100.236            1/1       Running   1          4m  
+
+### Installation of prod00kube02 and prod00kube03
+
+The assets created by Bootkube need to be copied to additional master nodes:
+
+* scp -r /home/core/assets core@prod00kube02.ams01.service.moovel.ibm.com:
+* scp -r /home/core/assets core@prod00kube03.ams01.service.moovel.ibm.com:
+
+Perform the following steps on both nodes:
+* mkdir /etc/kubernetes
+* cp /home/core/assets/auth/kubeconfig /etc/kubernetes
+* vim /etc/systemd/system/kubelet.service (see above for the content)
+* systemctl daemon-reload
+* systemctl enable kubelet
+* systemctl start kubelet
+* /usr/bin/rkt run \
+        --volume home,kind=host,source=/home/core \
+        --mount volume=home,target=/core \
+        --net=host quay.io/coreos/bootkube:v0.3.7 \
+        --exec /bootkube -- start --asset-dir=/core/assets
+
+
+
 
