@@ -45,6 +45,7 @@ Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
 Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
 EOF
 
+systemctl daemon-reload
 systemctl enable etcd-member
 systemctl start etcd-member
 
@@ -110,7 +111,8 @@ RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOF  
+
+EOF
 
 systemctl daemon-reload
 systemctl enable kubelet
