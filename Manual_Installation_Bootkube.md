@@ -34,15 +34,27 @@ The following instructions need to be performed on all three nodes:
 * vim /etc/systemd/system/etcd-member.service.d/10-etcd-member.conf
 
 [Service]  
-Environment="ETCD_IMAGE_TAG=v3.1.0"  
+Environment="ETCD_IMAGE_TAG=v3.1.1"  
 Environment="ETCD_NAME=$NAME"  
-Environment="ETCD_INITIAL_CLUSTER=node1=http://10.104.100.236:2380,node2=http://10.104.100.245:2380,node3=http://10.104.100.229:2380"  
+Environment="ETCD_INITIAL_CLUSTER=node1=http://10.104.100.236:2380,node2=http://10.104.100.245:2380,node3=http://10.104.100.239:2380"  
 Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://$NODE_IP:2380"  
 Environment="ETCD_ADVERTISE_CLIENT_URLS=http://$NODE_IP:2379"  
 Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"  
 Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"  
 
+Acitvate the corresponding systemd service:
+
 * systemctl-daemon-reload
 * systemctl enable etcd-member
 * systemctl start etcd-member
+
+With the following command you can verify if all node participate in the etcd cluster:
+
+ETCDCTL_API=3 /root/bin/etcdctl member list
+
+The output should look like:
+
+25184f9de106ed62, started, node2, http://10.104.100.245:2380, http://10.104.100.245:2379  
+c1bc8c19990923cc, started, node1, http://10.104.100.236:2380, http://10.104.100.236:2379  
+c6fb521b071b603c, started, node3, http://10.104.100.239:2380, http://10.104.100.239:2379  
 
