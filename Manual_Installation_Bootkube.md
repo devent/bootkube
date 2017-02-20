@@ -75,7 +75,7 @@ Log into prod00kube01 and execute the following steps and use Bootkube to create
 * /usr/bin/rkt run \  
         --volume home,kind=host,source=/home/core \  
         --mount volume=home,target=/core \  
-        --trust-keys-from-https --net=host quay.io/coreos/bootkube:v0.3.7 \  
+        --trust-keys-from-https --net=host quay.io/coreos/bootkube:v0.3.8 \  
 	--exec /bootkube -- render \  
 	--asset-dir=/core/assets \  
 	--api-servers=https://10.104.100.236:443,https://37.58.99.228:443,https://10.104.100.245:443,https://37.58.99.235:443,https://10.104.100.239:443,https://37.58.99.238:443 \  
@@ -132,7 +132,7 @@ WantedBy=multi-user.target
 * /usr/bin/rkt run \  
         --volume home,kind=host,source=/home/core \  
         --mount volume=home,target=/core \  
-        --net=host quay.io/coreos/bootkube:v0.3.7 \  
+        --net=host quay.io/coreos/bootkube:v0.3.8 \  
 	--exec /bootkube -- start --asset-dir=/core/assets  
 
 
@@ -172,7 +172,7 @@ Perform the following steps on both nodes:
 * /usr/bin/rkt run \  
         --volume home,kind=host,source=/home/core \  
         --mount volume=home,target=/core \  
-        --net=host quay.io/coreos/bootkube:v0.3.7 \  
+        --net=host quay.io/coreos/bootkube:v0.3.8 \  
         --exec /bootkube -- start --asset-dir=/core/assets  
 
 

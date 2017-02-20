@@ -71,7 +71,7 @@ fi
 mkdir -p /etc/kubernetes
 
 cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
-cp /home/core/assets/auth/kubeconfig /etc/kubernetes/
+cp /home/core/assets/auth/admin-kubeconfig /etc/kubernetes/
 
 # Configure and start kubelet.service
 
