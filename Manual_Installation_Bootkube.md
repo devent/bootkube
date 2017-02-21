@@ -164,7 +164,7 @@ The assets created by Bootkube need to be copied to additional master nodes:
 Perform the following steps on both nodes:  
 
 * mkdir /etc/kubernetes
-* cp /home/core/assets/auth/kubeconfig /etc/kubernetes
+* cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes
 * vim /etc/systemd/system/kubelet.service (see above for the content)
 * systemctl daemon-reload
 * systemctl enable kubelet
