@@ -4,8 +4,8 @@ Currrently, SL deploys Container Linux version 1010.5.0 which is rather old and 
 
 In order to update to a current version you have to perform the following steps:
 
-* vim /etc/coreos/update.conf and add the second line  
-GROUP=stable
+* vim /etc/coreos/update.conf (specify the strategy as depicted)  
+GROUP=stable  
 REBOOT_STRATEGY=etcd-lock
 * systemctl restart locksmithd
 * update_engine_client -update
