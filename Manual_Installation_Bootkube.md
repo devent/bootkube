@@ -82,7 +82,7 @@ Log into prod00kube01 and execute the following steps and use Bootkube to create
 	--etcd-servers=http://10.104.100.236:2379,http://10.104.100.245:2379,http://10.104.100.239:2379  
 * chown -R core:core /home/core/assets
 * mkdir -p /etc/kubernetes
-* cp /home/core/assets/auth/kubeconfig /etc/kubernetes/
+* cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
 
 ### Configure and start Kubelet service
 
@@ -136,9 +136,9 @@ WantedBy=multi-user.target
 	--exec /bootkube -- start --asset-dir=/core/assets  
 
 
-After a few minutes Bootkube should report:  _italic_ All self-hosted control plane components successfully started *italic*
+After a few minutes Bootkube should report:  _All self-hosted control plane components successfully started_.
 You can verify the installation with kubectl:  
-/home/core/bin/kubectl --kubeconfig=/etc/kubernetes/kubeconfig get pods -n=kube-system
+/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system
 
 The output should be similar to this one:
 
@@ -158,8 +158,8 @@ pod-checkpointer-10.104.100.236            1/1       Running   1          4m
 
 The assets created by Bootkube need to be copied to additional master nodes:
 
-* scp -r /home/core/assets core@prod00kube02.ams01.service.moovel.ibm.com:
-* scp -r /home/core/assets core@prod00kube03.ams01.service.moovel.ibm.com:
+* scp -r /home/core/assets core@10.104.100.245:
+* scp -r /home/core/assets core@10.104.100.239:
 
 Perform the following steps on both nodes:  
 
