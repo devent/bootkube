@@ -11,6 +11,13 @@ declare -a PUIPS=("37.58.99.228" "37.58.99.235" "37.58.99.238")
 # IP addresses of etcd nodes
 declare -a ETCDIPS=("37.58.99.228" "37.58.99.235" "37.58.99.238")
 
+# Check if k8s is already installed
+if [ ! -f /home/core/.k8s_installed ]; then
+  echo "K8s already installed "
+  echo "Stopping"
+  exit -1
+fi
+
 # Prerequisites - Installation of etcdctl and kubectl in /home/core/bin
 echo "Checking for prerequisites ..."
 
@@ -106,5 +113,8 @@ echo "kubelet.service started. Now starting Bootkube"
   --mount volume=home,target=/core \
   --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
   --exec /bootkube -- start --asset-dir=/core/assets
+
+
+touch /home/core/.k8s_installed
 
 exit

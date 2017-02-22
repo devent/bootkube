@@ -94,6 +94,7 @@ Perform the following steps on all Kubernetes masters
     *  for i in \`rkt image list | grep -v \^ID | awk '{print $1}'\`;do rkt image rm $i;done
 * rm -rf /home/core/assets
 * rm -rf /etc/kubernetes
+* rm -f /home/core/.k8s_installed
 * reboot
 
 After the reboot you should end up with three systems running etcd-member. Please check if the etcd cluster is ready (ETCDCTL_API=3 /home/core/bin/etcdctl member list).

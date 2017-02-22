@@ -14,3 +14,5 @@ for i in `rkt image list | grep -v \^ID | awk '{print $1}'`;do rkt image rm $i;d
 
 rm -rf /home/core/assets
 rm -rf /etc/kubernetes
+
+rm -f /home/core/.k8s_installed
