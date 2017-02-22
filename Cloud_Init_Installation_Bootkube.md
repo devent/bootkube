@@ -12,7 +12,7 @@ All three systems will be installed as Kubernetes master. A prerequisite is that
 
 When we deploy a Container Linux system via the SL API a cloud config file can be specified. However, this is currently not possible and hence we manually trigger the process.
 
-Copy the file cloud-init-no-etcd.sh to each node. Alternatively, you can upload it to a webserver and use the corresponding url in the following. On each node you have to manually trigger the execution of cloud init. Before you do this please open a second terminal and enter 'journalctl -f' to follow the installation process. Then in another terminal launch the command:  
+Copy the file cloud-init-no-etcd-first.sh to the first master node and cloud-init-no-etcd-additional.sh to the additional master nodes. Alternatively, you can upload the files to a webserver and use the corresponding url in the following. Next you have to manually trigger the execution of cloud init. Before you do this please open a second terminal and enter 'journalctl -f' to follow the installation process. Then launch the command:  
 coreos-cloudinit -from-file=/home/core/cloud-init-no-etcd.sh  
 If you want to use a webserver then please use '-from-url' instead.
 
@@ -39,7 +39,10 @@ kube-scheduler-2870198727-fdt75          |                    1/1  |     Running
 kube-scheduler-2870198727-g6lqd          |                    1/1  |     Running |  0  |        6m  
 pod-checkpointer-prod00kube01.ams01.service.moovel.ibm.com |  1/1  |     Running |  0  |        6m  
 
-Now you can move to the next node and repeat the process.
+Now you need to copy the assets to the additional Kubernetes masters  
+scp -r /home/core/assets masterxyz
+
+Log into the additional master nodes and trigger cloud init, this time using the file cloud-init-no-etcd-additional.sh
 
 ### How to remove an existing Kubernetes installation in SL if OS reload is not an option
 

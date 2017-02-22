@@ -107,5 +107,3 @@ echo "kubelet.service started. Now starting Bootkube"
   --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
   --exec /bootkube -- start --asset-dir=/core/assets
 
-
-echo "
