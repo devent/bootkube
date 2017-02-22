@@ -20,8 +20,8 @@ Perform the following steps on all Kubernetes masters
 * systemctl stop etcd-member  
 * rm -rf /var/lib/etcd/\*  
 * systemctl stop kubelet  
-* remove all docker containers  
+* remove all docker containers
     * for i in \`docker ps | grep -v \^CON | awk '{print $1}'\`;do docker rm -f $i;done  
-* remove all docker images  
+* remove all docker images
     * for i in \`docker images | grep -v \^REPO | awk '{print $3}'\`;do docker rmi -f $i;done  
 
