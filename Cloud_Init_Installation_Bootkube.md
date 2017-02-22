@@ -20,22 +20,24 @@ With kubectl you can check if the node and the corresponding pods are ready.
 
 /home/core/bin/kubectl --kubeconfig=/etc/kubernetes/admin-kubeconfig get nodes
 
-NAME                                        STATUS    AGE  
-prod00kube01.ams01.service.moovel.ibm.com   Ready     4m  
+NAME |                                        STATUS |   AGE  
+--- | --- | ---
+prod00kube01.ams01.service.moovel.ibm.com |  Ready |    4m  
 
 /home/core/bin/kubectl --kubeconfig=/etc/kubernetes/admin-kubeconfig get pods -n=kube-system 
 
-NAME                                                         READY     STATUS    RESTARTS   AGE  
-checkpoint-installer-bw3r5                                   1/1       Running   0          6m  
-kube-apiserver-spph5                                         1/1       Running   3          6m  
-kube-controller-manager-456776438-2nlr6                      1/1       Running   0          6m  
-kube-controller-manager-456776438-6bqln                      1/1       Running   0          6m  
-kube-dns-4101612645-qhffr                                    4/4       Running   0          6m  
-kube-flannel-7fpsd                                           2/2       Running   1          6m  
-kube-proxy-14qrf                                             1/1       Running   0          6m  
-kube-scheduler-2870198727-fdt75                              1/1       Running   0          6m  
-kube-scheduler-2870198727-g6lqd                              1/1       Running   0          6m  
-pod-checkpointer-prod00kube01.ams01.service.moovel.ibm.com   1/1       Running   0          6m  
+NAME | READY | STATUS | RESTARTS | AGE  
+---- | ----- | ------ | -------- | ---
+checkpoint-installer-bw3r5 | 1/1 | Running | 0 | 6m  
+kube-apiserver-spph5 | 1/1 |       Running |  3  |        6m  
+kube-controller-manager-456776438-2nlr6  |                    1/1  |     Running |  0  |        6m  
+kube-controller-manager-456776438-6bqln  |                    1/1  |     Running |  0  |        6m  
+kube-dns-4101612645-qhffr                |                    4/4  |     Running |  0  |        6m  
+kube-flannel-7fpsd                       |                    2/2  |     Running |  1  |        6m  
+kube-proxy-14qrf                         |                    1/1  |     Running |  0  |        6m  
+kube-scheduler-2870198727-fdt75          |                    1/1  |     Running |  0  |        6m  
+kube-scheduler-2870198727-g6lqd          |                    1/1  |     Running |  0  |        6m  
+pod-checkpointer-prod00kube01.ams01.service.moovel.ibm.com |  1/1  |     Running |  0  |        6m  
 
 Now you move to the next node and repeat the process.
 
