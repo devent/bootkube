@@ -40,7 +40,7 @@ echo "Calling bootkube render to create K8s assets"
   --exec /bootkube -- render \
   --asset-dir=/core/assets \
   --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443,https://${PRIPS[1]}:443,https://${PUIPS[1]}:443,https://${PRIPS[2]}:443,https://${PUIPS[2]}:443 \
-  --etcd-servers=http://${ETCDIPS{[0]}:2379,http://${ETCDIPS[1]}:2379,http://${ETCDIPS[2]}:2379
+  --etcd-servers=http://${ETCDIPS[0]}:2379,http://${ETCDIPS[1]}:2379,http://${ETCDIPS[2]}:2379
 
 chown -R core:core /home/core/assets
 
@@ -106,3 +106,6 @@ echo "kubelet.service started. Now starting Bootkube"
   --mount volume=home,target=/core \
   --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
   --exec /bootkube -- start --asset-dir=/core/assets
+
+
+echo "
