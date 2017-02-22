@@ -27,6 +27,6 @@ Perform the following steps on all Kubernetes masters
 * remove all rkt containers
     * for i in \`rkt list | grep -v \^UUID | awk '{print $1}'\`;do rkt rm $i;done
 * remove all rkt images
-    *  for i in `rkt image list | grep -v \^ID | awk '{print $1}'`;do rkt image rm $i;done
+    *  for i in \`rkt image list | grep -v \^ID | awk '{print $1}'\`;do rkt image rm $i;done
 
 
