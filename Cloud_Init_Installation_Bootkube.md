@@ -39,7 +39,7 @@ kube-scheduler-2870198727-fdt75          |                    1/1  |     Running
 kube-scheduler-2870198727-g6lqd          |                    1/1  |     Running |  0  |        6m  
 pod-checkpointer-prod00kube01.ams01.service.moovel.ibm.com |  1/1  |     Running |  0  |        6m  
 
-Now you move to the next node and repeat the process.
+Now you can move to the next node and repeat the process.
 
 ### How to remove an existing Kubernetes installation in SL if OS reload is not an option
 
