@@ -9,3 +9,18 @@ This document describes the steps to install Kubernetes with the help of Bootkub
 All three systems will be installed as Kubernetes master. A prerequisite is that a working etcd cluster is installed.
 
 
+
+
+
+
+### How to remove an existing Kubernetes installation in SL if OS reload is not an option
+
+Perform the following steps on all Kubernetes masters
+* systemctl stop etcd-member
+* rm -rf /var/lib/etcd/\*
+* systemctl stop kubelet
+* remove all docker containers
+    * for i in `docker ps | grep -v \^CON | awk '{print $1}'`;do docker rm -f $i;done
+* remove all docker images
+    * for i in `docker images | grep -v \^REPO | awk '{print $3}'`;do docker rmi -f $i;done
+
