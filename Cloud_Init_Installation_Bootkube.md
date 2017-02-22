@@ -8,7 +8,11 @@ This document describes the steps to install Kubernetes with the help of Bootkub
 
 All three systems will be installed as Kubernetes master. A prerequisite is that a working etcd cluster is installed.
 
-iii
+## Manually triggering the cloud-config process
+
+When we deploy a Container Linux system via the SL API a cloud config file can be specified. However, this is currently not possible and hence we manually trigger the process.
+
+
 
 
 
@@ -17,9 +21,11 @@ iii
 
 Perform the following steps on all Kubernetes masters
 
-* systemctl stop etcd-member  
-* rm -rf /var/lib/etcd/\*  
+* systemctl stop etcd-member (if running) 
+* rm -rf /var/lib/etcd/\*  (if running)
 * systemctl stop kubelet  
+* systemctl disable kubelet
+* rm -f /etc/systemd/system/kubelet.service
 * remove all docker containers
     * for i in \`docker ps --all | grep -v \^CON | awk '{print $1}'\`;do docker rm -f $i;done  
 * remove all docker images
@@ -28,5 +34,9 @@ Perform the following steps on all Kubernetes masters
     * for i in \`rkt list | grep -v \^UUID | awk '{print $1}'\`;do rkt rm $i;done
 * remove all rkt images
     *  for i in \`rkt image list | grep -v \^ID | awk '{print $1}'\`;do rkt image rm $i;done
+* rm -rf /home/core/assets
+* rm -rf /etc/kubernetes
+* reboot
 
+After the reboot you should end up with three systems running etcd-member. Please check if the etcd cluster is ready (ETCDCTL_API=3 /home/core/bin/etcdctl member list).
 
