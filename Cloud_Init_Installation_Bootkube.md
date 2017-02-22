@@ -8,7 +8,7 @@ This document describes the steps to install Kubernetes with the help of Bootkub
 
 All three systems will be installed as Kubernetes master. A prerequisite is that a working etcd cluster is installed.
 
-
+iii
 
 
 
