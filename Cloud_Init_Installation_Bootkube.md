@@ -21,7 +21,12 @@ Perform the following steps on all Kubernetes masters
 * rm -rf /var/lib/etcd/\*  
 * systemctl stop kubelet  
 * remove all docker containers
-    * for i in \`docker ps | grep -v \^CON | awk '{print $1}'\`;do docker rm -f $i;done  
+    * for i in \`docker ps --all | grep -v \^CON | awk '{print $1}'\`;do docker rm -f $i;done  
 * remove all docker images
     * for i in \`docker images | grep -v \^REPO | awk '{print $3}'\`;do docker rmi -f $i;done  
+* remove all rkt containers
+    * for i in \`rkt list | grep -v \^UUID | awk '{print $1}'\`;do rkt rm $i;done
+* remove all rkt images
+    *  for i in `rkt image list | grep -v \^ID | awk '{print $1}'`;do rkt image rm $i;done
+
 
