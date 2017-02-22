@@ -42,7 +42,7 @@ pod-checkpointer-prod00kube01.ams01.service.moovel.ibm.com |  1/1  |     Running
 Now you need to copy the assets to the additional Kubernetes masters  
 *scp -r /home/core/assets masterxyz*
 
-Log into the additional master nodes and trigger cloud init, this time using the file cloud-init-no-etcd-additional.sh
+Log into the additional master nodes and trigger cloud init, this time using the file *cloud-init-no-etcd-additional.sh*.  
 In the end your environment should look like:
 
 NAME |                                       STATUS  |  AGE
