@@ -78,7 +78,7 @@ if [ ! -f /home/core/.k8s_installed ]; then
   
 cat << EOF > /home/core/bin/environment.txt
   export PATH=$PATH:/home/core/bin
-  export KUBECONFIG=/etc/kubernetes/admin-kubeconfig
+  export KUBECONFIG=/home/core/assets/auth/admin-kubeconfig
   export ETCDCTL_API=3
 
 EOF
@@ -130,6 +130,8 @@ EOF
     --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
     --exec /bootkube -- start --asset-dir=/core/assets
 
+  sleep 20
+
   while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | wc -l` != 10 ]; do
     sleep 5
     echo "Container running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | wc -l`
@@ -140,7 +142,7 @@ EOF
 
 fi
 
-for node in `seq 1`; do
+for node in `seq 2`; do
 
   if [ `ssh ${PRIPS[$node]} 'if [ ! -f /home/core/.k8s_installed ]; then echo "not_installed"; fi'` ]; then
     echo "Starting to install node"$node ${PRIPS[$node]}
@@ -149,7 +151,7 @@ for node in `seq 1`; do
     # first we copy the necessary files to node2
     ssh ${PRIPS[$node]} 'if [ -d /home/core/assets ]; then rm -rf /home/core/assets; mkdir -p /home/core/assets/auth; fi' 
     ssh ${PRIPS[$node]} 'if [ -d /home/core/bin ]; then rm -rf /home/core/bin; fi'
-    ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then sudo rm -rf /etc/kubernetes/*; fi'
+    ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then sudo rm -r /etc/kubernetes/*;else sudo mkdir /etc/kubernetes; fi'
 
     scp -r /home/core/assets core@${PRIPS[$node]}:
     scp -r /home/core/bin core@${PRIPS[$node]}:
@@ -159,6 +161,8 @@ for node in `seq 1`; do
     rm /home/core/kubelet.service
     ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/auth/*kubeconfig /etc/kubernetes/'
     ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/kubelet.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable kubelet; sudo systemctl start kubelet'
+    echo "Give kubelet some time ..."
+    sleep 30
     ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
 
     while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | wc -l` != $((10+$node*5)) ]; do
@@ -170,5 +174,8 @@ for node in `seq 1`; do
   else
     echo "Node"$node "already installed, please check "${PRIPS[$node]}
   fi
+
+  ssh ${PRIPS[$node]} 'touch /home/core/.k8s_installed'
+  echo "Node"$node "installed." 
 
 done
