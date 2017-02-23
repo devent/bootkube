@@ -178,4 +178,12 @@ for node in `seq 2`; do
   ssh ${PRIPS[$node]} 'touch /home/core/.k8s_installed'
   echo "Node"$node "installed." 
 
+  # Scale controller-manager and scheduler to 3
+  echo "Scaling kube-controller-manager and kube-scheduler"
+  /home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-controller-manager -n=kube-system
+  /home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-scheduler -n=kube-system
+
+  # Install kubernetes dashboard
+
+
 done
