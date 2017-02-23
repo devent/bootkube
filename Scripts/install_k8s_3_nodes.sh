@@ -184,6 +184,15 @@ for node in `seq 2`; do
   /home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-scheduler -n=kube-system
 
   # Install kubernetes dashboard
+  echo "Installing the dashboard"
+  /home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
 
+  # Install heapster
+  echo "Installing heapster"
+  git clone https://github.com/kubernetes/heapster.git
+  cd heapster
+  sed -i 's/# type: NodePort/type: NodePort/' deploy/kube-config/influxdb/grafana-service.yaml
+  /home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig create -f deploy/kube-config/influxdb/
 
+  echo "Installation done"
 done
