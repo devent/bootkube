@@ -33,12 +33,12 @@ The script fetches current images from the Internet. A local registry is not set
 * Distribute your public ssh keys to the additional master nodes (user core)
 * Launch the script and wait for around 10 minutes
 
-You should end up with:
+You should end up with:  
 * a high available three node Kubernetes cluster
 * Kubernetes dashboard
 * Heapster (for monitoring)
 
-In order to access the dashboard you need to:
+In order to access the dashboard you need to:  
 * copy the file */home/core/assets/auth/admin-kubeconfig* to the jumpserver
 * download kubectl to the jumpserver (or you can use /home/andreas.hess/tools/kubectl)
 * execute the following command *./kubectl --kubeconfig=PATH-TO-ADMIN-KUBECONFIG proxy* --port=xxxx (default port is 8001)
@@ -48,6 +48,7 @@ To access Heapster, execute the command *./kubectl --kubeconfig=admin-kubeconfig
 The output should look similar to the following:
 
 Name:              |    monitoring-grafana
+------------------ | ----------------------
 Namespace:         |    kube-system
 Labels:            |    kubernetes.io/cluster-service=true
                    |    kubernetes.io/name=monitoring-grafana
