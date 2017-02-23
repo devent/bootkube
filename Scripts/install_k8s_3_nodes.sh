@@ -156,9 +156,9 @@ for node in `seq 2`; do
     scp -r /home/core/assets core@${PRIPS[$node]}:
     scp -r /home/core/bin core@${PRIPS[$node]}:
     
-    #Adjust IP addresses in admin-kubeconfig and bootstrap-kubeconfig
+    #Adjust IP addresses in admin-kubeconfig 
     ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/admin-kubeconfig"
-    ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/bootstrap-kubeconfig"
+    #ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/bootstrap-kubeconfig"
 
     configure_kubelet ${PRIPS[$node]}
     scp /home/core/kubelet.service core@${PRIPS[$node]}:/home/core/assets/
@@ -174,6 +174,9 @@ for node in `seq 2`; do
       echo "Expected number of running pods: " $((10+$node*5))
       echo "Currently running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l`
     done
+
+  # Adjust IP address in /etc/kubernetes/kubeconfig and restart kubelet
+  ssh ${PRIPS[$node]} "sudo sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /etc/kubernetes/kubeconfig;sudo systemctl restart kubelet"
 
   else
     echo "Node"$node "already installed, please check "${PRIPS[$node]}
