@@ -155,6 +155,10 @@ for node in `seq 2`; do
 
     scp -r /home/core/assets core@${PRIPS[$node]}:
     scp -r /home/core/bin core@${PRIPS[$node]}:
+    
+    #Adjust IP addresses in admin-kubeconfig and bootstrap-kubeconfig
+    ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/admin-kubeconfig"
+    ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/bootstrap-kubeconfig"
 
     configure_kubelet ${PRIPS[$node]}
     scp /home/core/kubelet.service core@${PRIPS[$node]}:/home/core/assets/
