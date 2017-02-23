@@ -96,6 +96,7 @@ Perform the following steps on all Kubernetes masters
 * rm -rf /etc/kubernetes
 * rm -f /home/core/.k8s_installed
 * reboot
+* rm -rf /var/lib/kubelet/* 
 
 After the reboot you should end up with three systems running etcd-member. Please check if the etcd cluster is ready (ETCDCTL_API=3 /home/core/bin/etcdctl member list).
 
