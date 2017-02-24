@@ -14,28 +14,6 @@ Create a client certificate
 * openssl req -new -key client.key -out client.csr -subj "/CN=fred/O=dev"
 * openssl x509 -req -in client.csr -CA /home/core/assets/tls/ca.crt -CAkey /home/core/assets/tls/ca.key -CAcreateserial -out client.crt -days 10000
 
-Create kubeconfig for user fred:
+Create kubeconfig for user fred (see file fred-kubeconfig.yml).
 
-apiVersion: v1  
-clusters:  
-- cluster:  
-    certificate-authority-data: BASE64_ENCODED_CA_CERTIFICATE  
-    server: https://x.x.x.x:443  
-  name: local  
-contexts:  
-- context:  
-    cluster: local  
-    namespace: dev  
-    user: fred   
-  name: local-dev  
-current-context: local-dev  
-kind: Config  
-preferences: {}  
-users:  
-- name: fred   
-  user:  
-    client-certificate-data: BASE64_ENCODED_CLIENT_CERTIFICATE  
-    client-key-data: BASE64_ENCODED_CLIENT_KEY  
-
-
-Use kubectl and the created kubeconfig to test the rights of user fred.
+Use kubectl and the created fred-kubeconfig to test the rights of user fred.
