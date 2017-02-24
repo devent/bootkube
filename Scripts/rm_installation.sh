@@ -1,6 +1,8 @@
 #!/bin/bash
 
 systemctl stop etcd-member
+systemctl disable etcd-member
+rm -rf /etc/systemd/system/etcd-member.service.d
 rm -rf /var/lib/etcd/*
 rm -rf /tmp/test-etcd
 systemctl stop kubelet

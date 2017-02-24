@@ -9,6 +9,8 @@ The bash script desribed in this document automatically installs three K8s maste
 The bash script does not consider the installation of an etcd cluster. The script can be extended, but currently an etcd cluster must be available. 
 The corresponding etcd IP addresses are configured in the beginning of the script.
 
+The script was extended such that etcd can automatically be installed on each master node. To enable this option set the configration parameter *INSTALL_ETCD* to *yes*.
+
 ### IP addresses of K8s master nodes
 
 The IP address of all three K8s master nodes must be specified upfront in the bash script. The IP addresses must be considered when creating certificates. In future this can be mitigated
