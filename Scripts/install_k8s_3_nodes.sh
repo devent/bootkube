@@ -13,6 +13,23 @@ declare -a PUIPS=("37.58.99.228" "37.58.99.235" "37.58.99.238")
 # IP addresses of etcd nodes
 declare -a ETCDIPS=("10.104.100.236" "10.104.100.245" "10.104.100.239")
 
+function configure_etcd() {
+
+  echo "Creating etc.service for node"$1
+
+  cat << EOF > /home/core/10-etcd-member.conf
+[Service]
+Environment="ETCD_IMAGE_TAG=$ETCD_VER"
+Environment="ETCD_NAME=node$1"
+Environment="ETCD_INITIAL_CLUSTER=node0=http://${PRIPS[0]}:2380,node1=http://${PRIPS[1]}:2380,node2=http://${PRIPS[2]}:2380"
+Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${PRIPS[$1]}:2380"
+Environment="ETCD_ADVERTISE_CLIENT_URLS=http://${PRIPS[$1]}:2379"
+Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
+Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
+
+EOF
+}
+
 
 function configure_kubelet() {
 
@@ -61,6 +78,18 @@ EOF
 
 # Check if k8s is already installed
 if [ ! -f /home/core/.k8s_installed ]; then
+
+  # Configure etcd on all nodes
+  for node in 0 1 2;do
+    echo "etcd for node "$node
+    configure_etcd $node 
+    scp /home/core/10-etcd-member.conf ${PRIPS[$node]}:/tmp/
+    ssh ${PRIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
+    ssh ${PRIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
+    ./start_etcd_member_on_node.sh ${PRIPS[$node]} &
+  done
+
+  sleep 20
 
   # Prerequisites - Installation of etcdctl and kubectl in /home/core/bin
   echo "Checking for prerequisites ..."
