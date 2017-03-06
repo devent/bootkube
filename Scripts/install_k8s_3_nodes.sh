@@ -41,6 +41,7 @@ function configure_kubelet() {
 Environment=KUBELET_ACI=quay.io/coreos/hyperkube
 Environment=KUBELET_VERSION=v1.5.3_coreos.0
 Environment="RKT_OPTS=\
+--volume var-log,kind=host,source=/var/log --mount volume=var-log,target=/var/log \
 --volume etc-resolv,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv,target=/etc/resolv.conf \
 --volume var-lib-cni,kind=host,source=/var/lib/cni --mount volume=var-lib-cni,target=/var/lib/cni"
 EnvironmentFile=/etc/environment
@@ -49,6 +50,7 @@ ExecStartPre=/bin/mkdir -p /etc/kubernetes/cni/net.d
 ExecStartPre=/bin/mkdir -p /etc/kubernetes/checkpoint-secrets
 ExecStartPre=/bin/mkdir -p /srv/kubernetes/manifests
 ExecStartPre=/bin/mkdir -p /var/lib/cni
+ExecStartPre=/bin/mkdir -p /var/log/containers
 ExecStart=/usr/lib/coreos/kubelet-wrapper \
   --kubeconfig=/etc/kubernetes/kubeconfig \
   --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubeconfig \
