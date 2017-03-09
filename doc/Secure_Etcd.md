@@ -61,7 +61,7 @@ a script that will export the needed settings.
 ```
 export ETCDCTL_API=3
 export ETCDCTL_DIAL_TIMEOUT=3s
-export ETCDCTL_ENDPOINTS=https://etcd-0.robobee.test:2379
+export ETCDCTL_ENDPOINTS=https://10.104.100.236:2379,...
 export ETCDCTL_CACERT=/etc/ssl/certs/etcd/ca_cert.pem
 export ETCDCTL_CERT=/etc/ssl/certs/etcd/client_cert.pem
 export ETCDCTL_KEY=/etc/ssl/certs/etcd/client_key_insecure.pem
@@ -93,7 +93,7 @@ The manifest file `kube-apiserver.yaml` must be amended with the
 following options.
 
 ```
-        - --etcd-servers=https://192.168.56.102:2379
+        - --etcd-servers=https://10.104.100.236:2379, ...
         - --etcd-cafile=/etc/ssl/certs/etcd/ca_cert.pem
         - --etcd-certfile=/etc/ssl/certs/etcd/client_cert.pem
         - --etcd-keyfile=/etc/ssl/certs/etcd/client_key_insecure.pem
