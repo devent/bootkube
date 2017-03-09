@@ -53,7 +53,7 @@ systemctl start etcd-member
 ## Setup Etcdctl
 
 If we have created client certificates that were signed by the cluster CA
-we can use those to connect to the cluster. For convience, we can create
+we can use those to connect to the cluster. For convenience, we can create
 a script that will export the needed settings.
 
 `vi etcd-env.sh`
@@ -88,3 +88,13 @@ to be able to connect to the secured Etcd cluster.
 
 The `kube-apiserver` must also be configured to use the client certificate
 to be able to connect to the secured Etcd cluster.
+
+The manifest file `kube-apiserver.yaml` must be amended with the
+following options.
+
+```
+        - --etcd-servers=https://192.168.56.102:2379
+        - --etcd-cafile=/etc/ssl/certs/etcd/ca_cert.pem
+        - --etcd-certfile=/etc/ssl/certs/etcd/client_cert.pem
+        - --etcd-keyfile=/etc/ssl/certs/etcd/client_key_insecure.pem
+```
