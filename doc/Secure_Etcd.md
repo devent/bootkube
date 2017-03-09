@@ -73,6 +73,17 @@ The `etcdctl` command should now be able to connect to the Etcd cluster.
 etcdctl3 member list
 ```
 
+## Setup Flanneld
+
+The flannel service must also be configured to use the client certificate
+to be able to connect to the secured Etcd cluster.
+
+```
+--etcd-keyfile="": SSL key file used to secure etcd communication.
+--etcd-certfile="": SSL certification file used to secure etcd communication.
+--etcd-cafile="": SSL Certificate Authority file used to secure etcd communication.
+```
+
 ## Setup Kubernetes
 
 The `kube-apiserver` must also be configured to use the client certificate
