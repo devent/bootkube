@@ -1,0 +1,17 @@
+{
+    "kind": "Service",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "web2"
+    },
+    "spec": {
+        "ports": [
+            {
+                "protocol": "TCP",
+                "port": 8080
+            }
+        ],
+        "type": "ExternalName",
+        "externalName": "sample.k8scluster.de"
+    }
+}
