@@ -7,10 +7,10 @@ function configure_kubelet() {
 
   cat << EOF > /home/core/kubelet.service
 [Service]
-Environment=KUBELET_ACI=quay.io/coreos/hyperkube
-Environment=KUBELET_VERSION=v1.5.4_coreos.0
-Environment="RKT_OPTS=\
---volume var-log,kind=host,source=/var/log --mount volume=var-log,target=/var/log \
+Environment=KUBELET_IMAGE_URL=quay.io/coreos/hyperkube
+Environment=KUBELET_IMAGE_TAG=v1.5.4_coreos.0
+Environment="RKT_RUN_ARGS=\
+--uuid-file-save=/var/run/kubelet-pod.uuid \
 --volume etc-resolv,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv,target=/etc/resolv.conf \
 --volume var-lib-cni,kind=host,source=/var/lib/cni --mount volume=var-lib-cni,target=/var/lib/cni"
 EnvironmentFile=/etc/environment
@@ -19,12 +19,12 @@ ExecStartPre=/bin/mkdir -p /etc/kubernetes/cni/net.d
 ExecStartPre=/bin/mkdir -p /etc/kubernetes/checkpoint-secrets
 ExecStartPre=/bin/mkdir -p /srv/kubernetes/manifests
 ExecStartPre=/bin/mkdir -p /var/lib/cni
-ExecStartPre=/bin/mkdir -p /var/log/containers
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/kubelet-pod.uuid
 ExecStart=/usr/lib/coreos/kubelet-wrapper \
   --kubeconfig=/etc/kubernetes/kubeconfig \
-  --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubeconfig \
-  --cert-dir=/etc/kubernetes/secrets \
   --require-kubeconfig \
+  --client-ca-file=/etc/kubernetes/ca.crt \
+  --anonymous-auth=false \
   --cni-conf-dir=/etc/kubernetes/cni/net.d \
   --network-plugin=cni \
   --lock-file=/var/run/lock/kubelet.lock \
@@ -37,12 +37,12 @@ ExecStart=/usr/lib/coreos/kubelet-wrapper \
   --cluster_domain=cluster.local \
   --config=/etc/kubernetes/manifests
 
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/kubelet-pod.uuid
 Restart=always
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-
 EOF
 }
 
@@ -74,7 +74,7 @@ if [ ! -f /home/core/.k8s_installed ]; then
   
 cat << EOF > /home/core/bin/environment.txt
   export PATH=$PATH:/home/core/bin
-  export KUBECONFIG=/home/core/assets/auth/admin-kubeconfig
+  export KUBECONFIG=/home/core/assets/auth/kubeconfig
   export ETCDCTL_API=3
 
 EOF
@@ -103,8 +103,10 @@ EOF
 
   sudo mkdir -p /etc/kubernetes
 
-  sudo cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
-  sudo cp /home/core/assets/auth/admin-kubeconfig /etc/kubernetes/
+  #sudo cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
+  #sudo cp /home/core/assets/auth/admin-kubeconfig /etc/kubernetes/
+  sudo cp /home/core/assets/auth/kubeconfig /etc/kubernetes/
+  sudo cp /home/core/assets/tls/ca.crt /etc/kubernetes/ca.crt
 
   # Configure and start kubelet.service
   echo "Configuring kubelet.service"
@@ -121,14 +123,16 @@ EOF
   sudo /usr/bin/rkt run \
     --volume home,kind=host,source=/home/core \
     --mount volume=home,target=/core \
-    --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
-    --exec /bootkube -- start --asset-dir=/core/assets
+    --volume manifests,kind=host,source=/etc/kubernetes/manifests \
+    --mount volume=manifests,target=/etc/kubernetes/manifests \
+    --net=host ${BOOTKUBE_REPO}:${BOOTKUBE_VERSION} \
+    --exec /bootkube -- start --asset-dir=/core/assets 
 
   sleep 20
 
-  while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != 10 ]; do
+  while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != 10 ]; do
     sleep 5
-    echo "Container running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l`
+    echo "Container running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l`
   done
 
   touch /home/core/.k8s_installed
@@ -150,23 +154,23 @@ for node in `seq 2`; do
     scp -r /home/core/assets core@${PRIPS[$node]}:
     scp -r /home/core/bin core@${PRIPS[$node]}:
     
-    #Adjust IP addresses in admin-kubeconfig 
-    ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/admin-kubeconfig"
+    #Adjust IP addresses in kubeconfig 
+    ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/kubeconfig"
     #ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/bootstrap-kubeconfig"
 
     configure_kubelet ${PRIPS[$node]}
     scp /home/core/kubelet.service core@${PRIPS[$node]}:/home/core/assets/
     rm /home/core/kubelet.service
-    ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/auth/*kubeconfig /etc/kubernetes/'
+    ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/auth/*kubeconfig /etc/kubernetes/;sudo cp /home/core/assets/tls/ca.crt /etc/kubernetes/'
     ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/kubelet.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable kubelet; sudo systemctl start kubelet'
     echo "Give kubelet some time ..."
     sleep 30
     ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
 
-    while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != $((10+$node*5)) ]; do
+    while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != $((10+$node*5)) ]; do
       sleep 5
       echo "Expected number of running pods: " $((10+$node*5))
-      echo "Currently running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l`
+      echo "Currently running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l`
     done
 
   # Adjust IP address in /etc/kubernetes/kubeconfig and restart kubelet
@@ -183,12 +187,12 @@ done
 
 # Scale controller-manager and scheduler to 3
 echo "Scaling kube-controller-manager and kube-scheduler"
-/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-controller-manager -n=kube-system
-/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-scheduler -n=kube-system
+/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-controller-manager -n=kube-system
+/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-scheduler -n=kube-system
 
 # Install kubernetes dashboard
 echo "Installing the dashboard"
-/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
+/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
 
 # Install heapster
 echo "Installing heapster"
@@ -199,6 +203,6 @@ fi
 git clone https://github.com/kubernetes/heapster.git
 cd heapster
 sed -i 's/# type: NodePort/type: NodePort/' deploy/kube-config/influxdb/grafana-service.yaml
-/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/admin-kubeconfig create -f deploy/kube-config/influxdb/
+/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig create -f deploy/kube-config/influxdb/
 
 echo "Installation done"
