@@ -14,12 +14,19 @@ IFS=',' read -r -a names <<< "$ETCD_NAME"
 function configure_etcd() {
 
   echo "Creating etc.service for ${names[$1]} IP ${ips[$1]}"
+ 
+  # This is a quick hack 
+  if [ ${#ips[@]} -eq 1 ];then
+	INITIAL_CLUSTER=${names[0]}=http://${ips[0]}:2380
+  else
+        INITIAL_CLUSTER=${names[0]}=http://${ips[0]}:2380,${names[1]}=http://${ips[1]}:2380,${names[2]}=http://${ips[2]}:2380
+  fi
 
   cat << EOF > /home/core/10-etcd-member.conf
 [Service]
 Environment="ETCD_IMAGE_TAG=$ETCD_VERSION"
 Environment="ETCD_NAME=${names[$1]}"
-Environment="ETCD_INITIAL_CLUSTER=${names[0]}=http://${ips[0]}:2380,${names[1]}=http://${ips[1]}:2380,${names[2]}=http://${ips[2]}:2380"
+Environment="ETCD_INITIAL_CLUSTER=$INITIAL_CLUSTER"
 Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${ips[$1]}:2380"
 Environment="ETCD_ADVERTISE_CLIENT_URLS=http://${ips[$1]}:2379"
 Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
@@ -29,7 +36,8 @@ EOF
 }
 
 # Install etcd-member service on all three nodes
-for node in 0 1 2;do
+for (( node=0; node<${#ips[@]}; node++ ));do
+#for node in 0 1 2;do
   echo "etcd for node "$node
   configure_etcd $node 
   scp /home/core/10-etcd-member.conf ${ips[$node]}:/tmp/

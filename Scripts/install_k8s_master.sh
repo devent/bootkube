@@ -86,14 +86,25 @@ EOF
   # Use Bootkube to create the relevant assets
   echo "Calling bootkube render to create K8s assets"
 
-  sudo /usr/bin/rkt run \
-    --volume home,kind=host,source=/home/core \
-    --mount volume=home,target=/core \
-    --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
-    --exec /bootkube -- render \
-    --asset-dir=/core/assets \
-    --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443,https://${PRIPS[1]}:443,https://${PUIPS[1]}:443,https://${PRIPS[2]}:443,https://${PUIPS[2]}:443 \
-    --etcd-servers=http://${ETCDIPS[0]}:2379,http://${ETCDIPS[1]}:2379,http://${ETCDIPS[2]}:2379
+  if [ ${#PRIPS[@]} -eq 1 ];then
+    sudo /usr/bin/rkt run \
+      --volume home,kind=host,source=/home/core \
+      --mount volume=home,target=/core \
+      --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
+      --exec /bootkube -- render \
+      --asset-dir=/core/assets \
+      --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443 \
+      --etcd-servers=http://${ETCDIPS[0]}:2379
+  else
+    sudo /usr/bin/rkt run \
+      --volume home,kind=host,source=/home/core \
+      --mount volume=home,target=/core \
+      --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
+      --exec /bootkube -- render \
+      --asset-dir=/core/assets \
+      --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443,https://${PRIPS[1]}:443,https://${PUIPS[1]}:443,https://${PRIPS[2]}:443,https://${PUIPS[2]}:443 \
+      --etcd-servers=http://${ETCDIPS[0]}:2379,http://${ETCDIPS[1]}:2379,http://${ETCDIPS[2]}:2379
+  fi
 
   sudo chown -R core:core /home/core/assets
 
@@ -140,55 +151,59 @@ EOF
 
 fi
 
-for node in `seq 2`; do
+if [ ${#PRIPS[@]} -ne 1 ];then
 
-  if [ `ssh ${PRIPS[$node]} 'if [ ! -f /home/core/.k8s_installed ]; then echo "not_installed"; fi'` ]; then
-    echo "Starting to install node"$node ${PRIPS[$node]}
+  for node in `seq 2`; do
 
-    # node will be installed as second master
-    # first we copy the necessary files to node2
-    ssh ${PRIPS[$node]} 'if [ -d /home/core/assets ]; then rm -rf /home/core/assets; mkdir -p /home/core/assets/auth; fi' 
-    ssh ${PRIPS[$node]} 'if [ -d /home/core/bin ]; then rm -rf /home/core/bin; fi'
-    ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then sudo rm -r /etc/kubernetes/*;else sudo mkdir /etc/kubernetes; fi'
+    if [ `ssh ${PRIPS[$node]} 'if [ ! -f /home/core/.k8s_installed ]; then echo "not_installed"; fi'` ]; then
+      echo "Starting to install node"$node ${PRIPS[$node]}
 
-    scp -r /home/core/assets core@${PRIPS[$node]}:
-    scp -r /home/core/bin core@${PRIPS[$node]}:
+      # node will be installed as second master
+      # first we copy the necessary files to node2
+      ssh ${PRIPS[$node]} 'if [ -d /home/core/assets ]; then rm -rf /home/core/assets; mkdir -p /home/core/assets/auth; fi' 
+      ssh ${PRIPS[$node]} 'if [ -d /home/core/bin ]; then rm -rf /home/core/bin; fi'
+      ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then sudo rm -r /etc/kubernetes/*;else sudo mkdir /etc/kubernetes; fi'
+
+      scp -r /home/core/assets core@${PRIPS[$node]}:
+      scp -r /home/core/bin core@${PRIPS[$node]}:
     
-    #Adjust IP addresses in kubeconfig 
-    ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/kubeconfig"
-    #ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/bootstrap-kubeconfig"
+      #Adjust IP addresses in kubeconfig 
+      ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/kubeconfig"
+      #ssh ${PRIPS[$node]} "sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /home/core/assets/auth/bootstrap-kubeconfig"
 
-    configure_kubelet ${PRIPS[$node]}
-    scp /home/core/kubelet.service core@${PRIPS[$node]}:/home/core/assets/
-    rm /home/core/kubelet.service
-    ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/auth/*kubeconfig /etc/kubernetes/;sudo cp /home/core/assets/tls/ca.crt /etc/kubernetes/'
-    ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/kubelet.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable kubelet; sudo systemctl start kubelet'
-    echo "Give kubelet some time ..."
-    sleep 30
-    ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
+      configure_kubelet ${PRIPS[$node]}
+      scp /home/core/kubelet.service core@${PRIPS[$node]}:/home/core/assets/
+      rm /home/core/kubelet.service
+      ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/auth/*kubeconfig /etc/kubernetes/;sudo cp /home/core/assets/tls/ca.crt /etc/kubernetes/'
+      ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/kubelet.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable kubelet; sudo systemctl start kubelet'
+      echo "Give kubelet some time ..."
+      sleep 30
+      ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
 
-    while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != $((10+$node*5)) ]; do
-      sleep 5
-      echo "Expected number of running pods: " $((10+$node*5))
-      echo "Currently running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l`
-    done
+      while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != $((10+$node*5)) ]; do
+        sleep 5
+        echo "Expected number of running pods: " $((10+$node*5))
+        echo "Currently running: " `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l`
+      done
 
-  # Adjust IP address in /etc/kubernetes/kubeconfig and restart kubelet
-  ssh ${PRIPS[$node]} "sudo sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /etc/kubernetes/kubeconfig;sudo systemctl restart kubelet"
+    # Adjust IP address in /etc/kubernetes/kubeconfig and restart kubelet
+    ssh ${PRIPS[$node]} "sudo sed -i 's/server: https:\/\/${PRIPS[0]}:443/server: https:\/\/${PRIPS[$node]}:443/' /etc/kubernetes/kubeconfig;sudo systemctl restart kubelet"
 
-  else
-    echo "Node"$node "already installed, please check "${PRIPS[$node]}
-  fi
+    else
+      echo "Node"$node "already installed, please check "${PRIPS[$node]}
+    fi
 
-  ssh ${PRIPS[$node]} 'touch /home/core/.k8s_installed'
-  echo "Node"$node "installed." 
+    ssh ${PRIPS[$node]} 'touch /home/core/.k8s_installed'
+    echo "Node"$node "installed." 
 
-done
+  done
 
-# Scale controller-manager and scheduler to 3
-echo "Scaling kube-controller-manager and kube-scheduler"
-/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-controller-manager -n=kube-system
-/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-scheduler -n=kube-system
+  # Scale controller-manager and scheduler to 3
+  echo "Scaling kube-controller-manager and kube-scheduler"
+  /home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-controller-manager -n=kube-system
+  /home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig scale --current-replicas=2 --replicas=3 deployment/kube-scheduler -n=kube-system
+
+fi
 
 # Install kubernetes dashboard
 echo "Installing the dashboard"
