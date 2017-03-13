@@ -7,8 +7,8 @@ function configure_kubelet() {
 
   cat << EOF > /home/core/kubelet.service
 [Service]
-Environment=KUBELET_IMAGE_URL=quay.io/coreos/hyperkube
-Environment=KUBELET_IMAGE_TAG=v1.5.4_coreos.0
+Environment=KUBELET_IMAGE_URL=$KUBELET_IMAGE_URL
+Environment=KUBELET_IMAGE_TAG=$KUBELET_IMAGE_TAG
 Environment="RKT_RUN_ARGS=\
 --uuid-file-save=/var/run/kubelet-pod.uuid \
 --volume etc-resolv,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv,target=/etc/resolv.conf \
