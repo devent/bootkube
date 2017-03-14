@@ -6,6 +6,7 @@ rm -rf /etc/systemd/system/etcd-member.service.d
 rm -rf /var/lib/etcd/*
 rm -rf /tmp/test-etcd
 systemctl stop kubelet
+systemctl stop docker
 systemctl disable kubelet
 rm -f /etc/systemd/system/kubelet.service
 
@@ -21,5 +22,11 @@ rm -rf /etc/kubernetes
 
 rm -f /home/core/.k8s_installed
 
+for i in `mount | grep /var/lib/kubelet | awk '{print $3}'`;do umount $i;done
 rm -rf /var/lib/kubelet/*
 rm -rf /var/log/containers
+rm -rf /var/lib/cni/
+
+ifconfig cni0 down
+ifconfig flannel.1 down
+ifconfig docker0 down
