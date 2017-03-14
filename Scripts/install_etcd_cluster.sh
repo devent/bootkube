@@ -5,19 +5,13 @@ set -euo pipefail
 # Changes the work directory to the script base directory.
 #
 function changeWorkDir() {
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    cd "$DIR"
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  cd "$DIR"
 }
 
-if [ $# -ne 1 ]; then
-    echo "Usage: ./install_etcd_cluster.sh CONFIGURATIONFILE"
-    exit -1
-fi
-
-source $1 
-
-changeWorkDir
-
+#
+# Creates the etcd-service for the node.
+#
 function configure_etcd() {
   echo "Creating etc.service for ${ETCDNAMES[$1]} IP ${ETCDIPS[$1]}"
   INITIAL_CLUSTER=$ETCD_CLUSTER
@@ -35,24 +29,25 @@ Environment="ETCD_LISTEN_PEER_URLS=$ETCD_PROTO://0.0.0.0:2380"
 EOF
 }
 
+#
 # Install etcd-member service on all three nodes
-for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
-#for node in 0 1 2;do
+#
+function install_etcd_nodes() {
+  for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
+  #for node in 0 1 2;do
   echo "etcd for node "$node
   configure_etcd $node 
   scp /home/core/10-etcd-member.conf $ETCD_NODE_USER@${ETCDIPS[$node]}:/tmp/
   ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
   ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
   ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
-    
-done
+  done
+}
 
-for i in `seq 10`; do
- echo "Waiting .."
- sleep 3
-done
-
-  # Installation of etcdctl in /home/core/bin
+#
+# Installation of etcdctl in /home/core/bin
+#
+function install_etcdctl() {
   echo "Checking for prerequisites ..."
 
   if [ ! -d "/home/core/bin" ]; then
@@ -71,7 +66,24 @@ cat << EOF > /home/core/bin/environment.txt
 EOF
   
   fi
+}
 
+if [ $# -ne 1 ]; then
+  echo "Usage: ./install_etcd_cluster.sh CONFIGURATIONFILE"
+  exit -1
+fi
+
+source $1 
+
+changeWorkDir
+install_etcd_nodes
+
+for i in `seq 10`; do
+ echo "Waiting .."
+ sleep 3
+done
+
+install_etcdctl
 
 echo "Installation of etcd done"
 ETCDCTL_API=3 /home/core/bin/etcdctl member list
