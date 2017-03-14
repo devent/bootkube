@@ -1,6 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
+#
+# Changes the work directory to the script base directory.
+#
+function changeWorkDir() {
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  cd "$DIR"
+}
+
 function configure_kubelet() {
 
   echo "Creating kubelet.service for "$1
@@ -56,6 +64,8 @@ fi
 
 source $1
 
+changeWorkDir
+
 # We are on node1 and the first installation step takes place locally
 
 # Check if k8s is already installed
@@ -96,10 +106,7 @@ EOF
 
   sudo chown -R core:core /home/core/assets
 
-  if [ -d "/etc/kubernetes" ]; then
-    sudo rm -rf /etc/kubernetes
-  fi
-
+  sudo rm -rf /etc/kubernetes; true
   sudo mkdir -p /etc/kubernetes
 
   #sudo cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
