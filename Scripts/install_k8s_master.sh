@@ -155,9 +155,17 @@ if [ ${#PRIPS[@]} -ne 1 ];then
 
       # node will be installed as second master
       # first we copy the necessary files to node2
-      ssh ${PRIPS[$node]} 'if [ -d /home/core/assets ]; then rm -rf /home/core/assets; mkdir -p /home/core/assets/auth; fi' 
-      ssh ${PRIPS[$node]} 'if [ -d /home/core/bin ]; then rm -rf /home/core/bin; fi'
-      ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then sudo rm -r /etc/kubernetes/*;else sudo mkdir /etc/kubernetes; fi'
+      ssh ${PRIPS[$node]} 'if [ -d /home/core/assets ]; then \
+      rm -rf /home/core/assets; \
+      mkdir -p /home/core/assets/auth; \
+      fi' 
+      ssh ${PRIPS[$node]} 'if [ -d /home/core/bin ]; then \
+      rm -rf /home/core/bin; \
+      fi'
+      ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then \
+      sudo rm -r /etc/kubernetes/*; \
+      else sudo mkdir /etc/kubernetes; \
+      fi'
 
       scp -r /home/core/assets core@${PRIPS[$node]}:
       scp -r /home/core/bin core@${PRIPS[$node]}:
