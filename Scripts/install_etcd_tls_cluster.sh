@@ -39,7 +39,7 @@ EOF
 # Install etcd-member service on all three nodes
 #
 function install_etcd_nodes() {
-  git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO .etcd_private
+  git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private
   for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
   #for node in 0 1 2;do
   echo "etcd for node "$node
@@ -51,6 +51,8 @@ function install_etcd_nodes() {
   ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo mv /tmp/etcd /etc/ssl/certs'
   ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
   done
+  # cleanup.
+  rm -rf /home/core/.etcd_private
 }
 
 #
