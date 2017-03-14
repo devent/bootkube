@@ -39,6 +39,7 @@ EOF
 # Install etcd-member service on all three nodes
 #
 function install_etcd_nodes() {
+  rm -rf /home/core/.etcd_private
   git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private
   for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
   #for node in 0 1 2;do
@@ -51,8 +52,6 @@ function install_etcd_nodes() {
   ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo rm -rf /etc/ssl/certs/etcd.old; sudo mv /etc/ssl/certs/etcd /etc/ssl/certs/etcd.old; sudo mv /tmp/etcd /etc/ssl/certs'
   ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
   done
-  # cleanup.
-  rm -rf /home/core/.etcd_private
 }
 
 #
@@ -73,6 +72,11 @@ function install_etcdctl() {
 cat << EOF > /home/core/bin/environment.txt
   export PATH=$PATH:/home/core/bin
   export ETCDCTL_API=3
+  export ETCDCTL_DIAL_TIMEOUT=3s
+  export ETCDCTL_ENDPOINTS=$ETCD_ENDPOINTS
+  export ETCDCTL_CACERT=/etc/ssl/certs/etcd/ca_cert.pem
+  export ETCDCTL_CERT=/etc/ssl/certs/etcd/client_cert.pem
+  export ETCDCTL_KEY=/etc/ssl/certs/etcd/client_key_insecure.pem
 
 EOF
   
