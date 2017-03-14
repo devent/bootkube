@@ -22,4 +22,4 @@ rm -rf /etc/kubernetes
 rm -f /home/core/.k8s_installed
 
 rm -rf /var/lib/kubelet/*
-
+rm -rf /var/log/containers

@@ -11,6 +11,7 @@ Environment=KUBELET_IMAGE_URL=$KUBELET_IMAGE_URL
 Environment=KUBELET_IMAGE_TAG=$KUBELET_IMAGE_TAG
 Environment="RKT_RUN_ARGS=\
 --uuid-file-save=/var/run/kubelet-pod.uuid \
+--volume var-log,kind=host,source=/var/log --mount volume=var-log,target=/var/log \
 --volume etc-resolv,kind=host,source=/etc/resolv.conf --mount volume=etc-resolv,target=/etc/resolv.conf \
 --volume var-lib-cni,kind=host,source=/var/lib/cni --mount volume=var-lib-cni,target=/var/lib/cni"
 EnvironmentFile=/etc/environment
@@ -18,6 +19,7 @@ ExecStartPre=/bin/mkdir -p /etc/kubernetes/manifests
 ExecStartPre=/bin/mkdir -p /etc/kubernetes/cni/net.d
 ExecStartPre=/bin/mkdir -p /etc/kubernetes/checkpoint-secrets
 ExecStartPre=/bin/mkdir -p /srv/kubernetes/manifests
+ExecStartPre=/bin/mkdir -p /var/log/containers
 ExecStartPre=/bin/mkdir -p /var/lib/cni
 ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/kubelet-pod.uuid
 ExecStart=/usr/lib/coreos/kubelet-wrapper \
