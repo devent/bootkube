@@ -37,9 +37,9 @@ function install_etcd_nodes() {
   #for node in 0 1 2;do
   echo "etcd for node "$node
   configure_etcd $node 
-  scp /home/core/10-etcd-member.conf $ETCD_NODE_USER@${ETCDIPS[$node]}:/tmp/
-  ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
-  ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
+  scp /home/core/10-etcd-member.conf ${ETCDIPS[$node]}:/tmp/
+  ssh ${ETCDIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
+  ssh ${ETCDIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
   ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
   done
 }
