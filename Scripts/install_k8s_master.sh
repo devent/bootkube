@@ -55,9 +55,6 @@ if [ $# -ne 1 ]; then
 fi
 
 source $1
-IFS=',' read -r -a PRIPS <<< "$API_PRIVATE_IPS"
-IFS=',' read -r -a PUIPS <<< "$API_PUBLIC_IPS"
-IFS=',' read -r -a ETCDIPS <<< "$ETCD_IP"
 
 # We are on node1 and the first installation step takes place locally
 
