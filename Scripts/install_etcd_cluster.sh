@@ -8,42 +8,32 @@ fi
 
 source $1 
 
-IFS=',' read -r -a ips <<< "$ETCD_IP"
-IFS=',' read -r -a names <<< "$ETCD_NAME"
-
 function configure_etcd() {
-
-  echo "Creating etc.service for ${names[$1]} IP ${ips[$1]}"
- 
-  # This is a quick hack 
-  if [ ${#ips[@]} -eq 1 ];then
-	INITIAL_CLUSTER=${names[0]}=http://${ips[0]}:2380
-  else
-        INITIAL_CLUSTER=${names[0]}=http://${ips[0]}:2380,${names[1]}=http://${ips[1]}:2380,${names[2]}=http://${ips[2]}:2380
-  fi
+  echo "Creating etc.service for ${ETCDNAMES[$1]} IP ${ETCDIPS[$1]}"
+  INITIAL_CLUSTER=$ETCD_CLUSTER
 
   cat << EOF > /home/core/10-etcd-member.conf
 [Service]
 Environment="ETCD_IMAGE_TAG=$ETCD_VERSION"
-Environment="ETCD_NAME=${names[$1]}"
+Environment="ETCD_NAME=${ETCDNAMES[$1]}"
 Environment="ETCD_INITIAL_CLUSTER=$INITIAL_CLUSTER"
-Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${ips[$1]}:2380"
-Environment="ETCD_ADVERTISE_CLIENT_URLS=http://${ips[$1]}:2379"
-Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
-Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
+Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=$ETCD_PROTO://${ETCDIPS[$1]}:2380"
+Environment="ETCD_ADVERTISE_CLIENT_URLS=$ETCD_PROTO://${ETCDIPS[$1]}:2379"
+Environment="ETCD_LISTEN_CLIENT_URLS=$ETCD_PROTO://0.0.0.0:2379"
+Environment="ETCD_LISTEN_PEER_URLS=$ETCD_PROTO://0.0.0.0:2380"
 
 EOF
 }
 
 # Install etcd-member service on all three nodes
-for (( node=0; node<${#ips[@]}; node++ ));do
+for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
 #for node in 0 1 2;do
   echo "etcd for node "$node
   configure_etcd $node 
-  scp /home/core/10-etcd-member.conf ${ips[$node]}:/tmp/
-  ssh ${ips[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
-  ssh ${ips[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
-  ./start_etcd_member_on_node.sh ${ips[$node]} &
+  scp /home/core/10-etcd-member.conf ${ETCDIPS[$node]}:/tmp/
+  ssh ${ETCDIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
+  ssh ${ETCDIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
+  ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
     
 done
 
