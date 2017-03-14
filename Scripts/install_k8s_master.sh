@@ -88,25 +88,14 @@ EOF
   # Use Bootkube to create the relevant assets
   echo "Calling bootkube render to create K8s assets"
 
-  if [ ${#PRIPS[@]} -eq 1 ];then
-    sudo /usr/bin/rkt run \
+  sudo /usr/bin/rkt run \
       --volume home,kind=host,source=/home/core \
       --mount volume=home,target=/core \
       --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
       --exec /bootkube -- render \
       --asset-dir=/core/assets \
-      --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443 \
-      --etcd-servers=http://${ETCDIPS[0]}:2379
-  else
-    sudo /usr/bin/rkt run \
-      --volume home,kind=host,source=/home/core \
-      --mount volume=home,target=/core \
-      --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
-      --exec /bootkube -- render \
-      --asset-dir=/core/assets \
-      --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443,https://${PRIPS[1]}:443,https://${PUIPS[1]}:443,https://${PRIPS[2]}:443,https://${PUIPS[2]}:443 \
-      --etcd-servers=http://${ETCDIPS[0]}:2379,http://${ETCDIPS[1]}:2379,http://${ETCDIPS[2]}:2379
-  fi
+      --api-servers=$API_SERVERS \
+      --etcd-servers=$ETCD_ENDPOINTS
 
   sudo chown -R core:core /home/core/assets
 
