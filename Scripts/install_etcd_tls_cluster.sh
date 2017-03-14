@@ -35,11 +35,15 @@ Environment="ETCD_PEER_CLIENT_CERT_AUTH=true"
 EOF
 }
 
+function cleanup_private() {
+  rm -rf /home/core/.etcd_private
+}
+
 #
 # Install etcd-member service on all three nodes
 #
 function install_etcd_nodes() {
-  rm -rf /home/core/.etcd_private
+  cleanup_private; true
   git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private
   for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
   #for node in 0 1 2;do
@@ -52,6 +56,7 @@ function install_etcd_nodes() {
   ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo rm -rf /etc/ssl/certs/etcd.old; sudo mv /etc/ssl/certs/etcd /etc/ssl/certs/etcd.old; sudo mv /tmp/etcd /etc/ssl/certs'
   ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
   done
+  cleanup_private
 }
 
 #
