@@ -9,14 +9,14 @@ function changeWorkDir() {
     cd "$DIR"
 }
 
-changeWorkDir
-
 if [ $# -ne 1 ]; then
     echo "Usage: ./install_etcd_cluster.sh CONFIGURATIONFILE"
     exit -1
 fi
 
 source $1 
+
+changeWorkDir
 
 function configure_etcd() {
   echo "Creating etc.service for ${ETCDNAMES[$1]} IP ${ETCDIPS[$1]}"
