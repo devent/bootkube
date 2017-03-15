@@ -13,13 +13,13 @@ function changeWorkDir() {
 # Creates the elasticsearch configuration for the node.
 #
 function configure_elasticsearch() {
-  echo "Creating elasticsearch configuration for $EL_CLUSTER IP ${ELIPS[$1]}"
+  echo "Creating elasticsearch configuration for $EL_CLUSTER_NAME IP ${ELIPS[$1]}"
 
   cat << EOF > /tmp/elasticsearch.yml
 network.host: 0.0.0.0
 
 cluster:
-  name: "$EL_CLUSTER"
+  name: "$EL_CLUSTER_NAME"
 
 EOF
 }
@@ -34,8 +34,8 @@ function install_elasticsearch_nodes() {
   configure_etcd $node 
   scp /tmp/elasticsearch.yml ${ELIPS[$node]}:/tmp/
   ssh ${ELIPS[$node]} "\
-  sudo mkdir /srv/el/$EL_CLUSTER/conf /srv/el/$EL_CLUSTER/data /srv/el/$EL_CLUSTER/templates; \
-  sudo mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER/conf/; \
+  sudo mkdir /srv/el/$EL_CLUSTER_NAME/conf /srv/el/$EL_CLUSTER_NAME/data /srv/el/$EL_CLUSTER_NAME/templates; \
+  sudo mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER_NAME/conf/; \
   sudo docker run --name "$DATA_NAME" \
         $EL_LOG \
         $EL_VOLUMES \
