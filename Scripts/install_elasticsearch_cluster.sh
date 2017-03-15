@@ -30,7 +30,7 @@ EOF
 # Install elasticsearch service on all three nodes
 #
 function install_elasticsearch_nodes() {
-  node=$1
+  ssssssssssssssssssssssssssssssnode=$1
   ip=${ELIPS[$node]}
   echo "elasticsearch for node $node"
   configure_elasticsearch $node 
@@ -38,7 +38,7 @@ function install_elasticsearch_nodes() {
   ssh $ip "\
   sudo mkdir /srv/el/$EL_CLUSTER_NAME/conf /srv/el/$EL_CLUSTER_NAME/data /srv/el/$EL_CLUSTER_NAME/templates; \
   sudo mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER_NAME/conf/; \
-  sudo docker run --name "$DATA_NAME" \
+  sudo docker run --name "$EL_DATA_NAME" \
         $EL_LOG \
         $EL_VOLUMES \
         $EL_IMAGE \
