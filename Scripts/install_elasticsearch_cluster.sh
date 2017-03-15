@@ -15,7 +15,7 @@ function changeWorkDir() {
 function configure_elasticsearch() {
   node=$1
   ip=${ELIPS[$node]}
-  name=${ELNAME[$node]}
+  name=${ELNAMES[$node]}
   echo "Creating elasticsearch configuration for $EL_CLUSTER_NAME IP $ip"
 
   cat << EOF > /tmp/elasticsearch.yml
