@@ -74,9 +74,7 @@ if [ ! -f /home/core/.k8s_installed ]; then
   # Prerequisites - Installation of etcdctl and kubectl in /home/core/bin
   echo "Checking for prerequisites ..."
 
-  if [ ! -d "/home/core/bin" ]; then
-    mkdir -p /home/core/bin
-  fi
+  mkdir -p /home/core/bin; true
 
   curl https://storage.googleapis.com/kubernetes-release/release/v1.5.4/bin/linux/amd64/kubectl > /home/core/bin/kubectl
   chmod +x /home/core/bin/kubectl
@@ -88,9 +86,7 @@ cat << EOF > /home/core/bin/environment.txt
 
 EOF
   
-  if [ -d "/home/core/assets" ]; then
-    rm -rf /home/core/assets
-  fi
+  rm -rf /home/core/assets; true
 
   # Use Bootkube to create the relevant assets
   echo "Calling bootkube render to create K8s assets"
@@ -107,7 +103,7 @@ EOF
   sudo chown -R core:core /home/core/assets
 
   sudo rm -rf /etc/kubernetes; true
-  sudo mkdir -p /etc/kubernetes
+  sudo mkdir -p /etc/kubernetes/manifests
 
   #sudo cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
   #sudo cp /home/core/assets/auth/admin-kubeconfig /etc/kubernetes/
