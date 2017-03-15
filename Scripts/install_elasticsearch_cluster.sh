@@ -41,18 +41,20 @@ function install_elasticsearch_nodes() {
   ssh $ip "\
   sudo mkdir -p /srv/el/$EL_CLUSTER_NAME/conf /srv/el/$EL_CLUSTER_NAME/data /srv/el/$EL_CLUSTER_NAME/templates; \
   sudo mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER_NAME/conf/; \
+  if ! docker ps -a | egrep '^.*\s+$EL_DATA_NAME\$\$'; then \
   sudo docker run --name "$EL_DATA_NAME" \
         $EL_LOG \
         $EL_VOLUMES \
         $EL_IMAGE \
-        bash -c 'chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data && chmod -R o+rX /usr/share/elasticsearch/data'; \
+        bash -c 'chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data && chmod -R o+rX /usr/share/elasticsearch/data'; fi \
+  if ! docker ps | egrep '^.*\s+$EL_NAME\$\$'; then \
   sudo docker run -d --name "$EL_NAME" \
         $EL_ARGS \
         --volumes-from=$EL_DATA_NAME \
         $EL_CONFIGS \
         $EL_PORTS \
         $EL_ENVS \
-        $EL_IMAGE
+        $EL_IMAGE; fi
   "
 }
 
