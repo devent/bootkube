@@ -150,7 +150,14 @@ if [ ${#PRIPS[@]} -ne 1 ];then
 
   for node in `seq 2`; do
 
-    if [ `ssh ${PRIPS[$node]} 'if [ ! -f /home/core/.k8s_installed ]; then echo "not_installed"; fi'` ]; then
+    is_installed=$(ssh ${PRIPS[$node]} 'if [ ! -f /home/core/.k8s_installed ]; then echo "not_installed"; else echo "installed"; fi')
+    ret=$?
+    if [[ $ret == 255 ]]; then
+      echo "Error $ret, exit."
+      exit $ret
+    fi
+    
+    if [[ "$is_installed" != "installed" ]]; then
       echo "Starting to install node"$node ${PRIPS[$node]}
 
       # node will be installed as second master
