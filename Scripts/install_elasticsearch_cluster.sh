@@ -51,7 +51,6 @@ function install_elasticsearch_nodes() {
         $EL_ENVS \
         $EL_IMAGE
   "
-  done
 }
 
 if [ $# -ne 1 ]; then
