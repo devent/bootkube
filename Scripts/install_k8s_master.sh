@@ -184,7 +184,7 @@ if [ ${#PRIPS[@]} -ne 1 ];then
       ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/kubelet.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable kubelet; sudo systemctl start kubelet'
       echo "Give kubelet some time ..."
       sleep 30
-      ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
+      ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --trust-keys-from-https --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
 
       while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != $((10+$node*5)) ]; do
         sleep 5
