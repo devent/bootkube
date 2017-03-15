@@ -103,7 +103,7 @@ EOF
   sudo chown -R core:core /home/core/assets
 
   sudo rm -rf /etc/kubernetes; true
-  sudo mkdir -p /etc/kubernetes/manifests
+  sudo mkdir -p /etc/kubernetes
 
   #sudo cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
   #sudo cp /home/core/assets/auth/admin-kubeconfig /etc/kubernetes/
