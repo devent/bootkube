@@ -51,6 +51,7 @@ if ! docker ps | egrep '^.*\s+$EL_NAME\$'; then
 fi
 
 EOF
+  scp /tmp/install_el.sh $ip:/tmp/
   ssh $ip bash -xc /tmp/install_el.sh
 }
 
