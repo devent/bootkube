@@ -51,7 +51,7 @@ if ! docker ps | egrep '^.*\s+$EL_NAME\$'; then
 fi
 
 EOF
-  ssh $ip bash -xc /home/core/install_el.sh
+  ssh $ip bash -x /home/core/install_el.sh
 }
 
 if [ $# -ne 1 ]; then
