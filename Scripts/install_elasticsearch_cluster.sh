@@ -38,7 +38,7 @@ function install_elasticsearch_nodes() {
   echo "elasticsearch for node $node"
   configure_elasticsearch $node 
   scp /tmp/elasticsearch.yml $ip:/tmp/
-  cat << EOF > /home/core/install_el.sh
+  cat << EOF > /tmp/install_el.sh
 sudo mkdir -p /srv/el/$EL_CLUSTER_NAME/conf /srv/el/$EL_CLUSTER_NAME/data /srv/el/$EL_CLUSTER_NAME/templates
 sudo mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER_NAME/conf/
 mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER_NAME/conf/
@@ -51,7 +51,8 @@ if ! docker ps | egrep '^.*\s+$EL_NAME\$'; then
 fi
 
 EOF
-  ssh $ip bash -x /home/core/install_el.sh
+  scp /tmp/install_el.sh $ip:/tmp/
+  ssh $ip bash -x /tmp/install_el.sh
 }
 
 if [ $# -ne 1 ]; then
