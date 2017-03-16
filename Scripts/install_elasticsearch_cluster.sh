@@ -18,7 +18,7 @@ function configure_elasticsearch() {
   name=${ELNAMES[$node]}
   echo "Creating elasticsearch configuration for $EL_CLUSTER_NAME IP $ip"
 
-  cat << EOF > /tmp/elasticsearch.yml
+  cat << EOF > /tmp/.elasticsearch.yml
 network.host: 0.0.0.0
 discovery.zen.ping.unicast.hosts: [$EL_ENDPOINTS]
 node.name: $name
@@ -37,8 +37,8 @@ function install_elasticsearch_nodes() {
   ip=${ELIPS[$node]}
   echo "elasticsearch for node $node"
   configure_elasticsearch $node 
-  scp /tmp/elasticsearch.yml $ip:/tmp/
-  cat << EOF > /tmp/install_el.sh
+  scp /tmp/.elasticsearch.yml $ip:/tmp/elasticsearch.yml
+  cat << EOF > /tmp/.install_el.sh
 sudo mkdir -p /srv/el/$EL_CLUSTER_NAME/conf /srv/el/$EL_CLUSTER_NAME/data /srv/el/$EL_CLUSTER_NAME/templates
 sudo mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER_NAME/conf/
 mv /tmp/elasticsearch.yml /srv/el/$EL_CLUSTER_NAME/conf/
@@ -47,11 +47,12 @@ sudo docker run --name "$EL_DATA_NAME" $EL_LOG $EL_VOLUMES $EL_IMAGE \
   bash -c 'chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data && chmod -R o+rX /usr/share/elasticsearch/data'
 fi
 if ! docker ps | egrep '^.*\s+$EL_NAME\$'; then
+  sudo docker rm $EL_NAME
   sudo docker run -d --name $EL_NAME $EL_ARGS --volumes-from=$EL_DATA_NAME $EL_CONFIGS $EL_PORTS $EL_ENVS $EL_IMAGE
 fi
 
 EOF
-  scp /tmp/install_el.sh $ip:/tmp/
+  scp /tmp/.install_el.sh $ip:/tmp/install_el.sh
   ssh $ip bash -x /tmp/install_el.sh
 }
 
