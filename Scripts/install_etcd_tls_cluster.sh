@@ -45,10 +45,11 @@ function install_etcd_nodes() {
   #for node in 0 1 2;do
   echo "etcd for node "$node
   configure_etcd $node
-  scp -r /home/core/.etcd_private ${ETCDIPS[$node]}:/tmp/
+  scp -r /home/core/.etcd_private/etcd ${ETCDIPS[$node]}:/tmp/
   scp /home/core/10-etcd-member.conf ${ETCDIPS[$node]}:/tmp/
   ssh ${ETCDIPS[$node]} '\
-  sudo cp /tmp/.etcd_private/etcd /etc/ssl/certs; \
+  sudo cp /tmp/etcd /etc/ssl/certs; \
+  rm -rf /tmp/etcd; \
   sudo systemctl stop etcd-member; \
   if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; \
   sudo mkdir /etc/systemd/system/etcd-member.service.d'
