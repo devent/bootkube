@@ -56,6 +56,29 @@ WantedBy=multi-user.target
 EOF
 }
 
+function patchApiServerManifest() {
+  cat << EOF > /tmp/apiserver-add.txt
+        - --etcd-cafile=/etc/etcd-ssl/ca_cert.pem
+        - --etcd-certfile=/etc/etcd-ssl/client_cert.pem
+        - --etcd-keyfile=/etc/etcd-ssl/client_key_insecure.pem
+EOF
+  sed -i '/-\ --etcd-servers=/r /tmp/apiserver-add.txt' /home/core/assets/manifests/kube-apiserver.yaml
+
+  cat << EOF > /tmp/apiserver-add.txt
+      - name: ssl-certs-etcd
+        hostPath:
+          path: /usr/ssl/certs/etcd
+EOF
+  sed -i '/volumes:/r /tmp/apiserver-add.txt' /home/core/assets/manifests/kube-apiserver.yaml
+      
+  cat << EOF > /tmp/apiserver-add.txt
+        - mountPath: /etc/etcd-ssl
+          name: ssl-certs-etcd
+          readOnly: true
+EOF
+  sed -i '/volumeMounts:/r /tmp/apiserver-add.txt' /home/core/assets/manifests/kube-apiserver.yaml
+}
+
 
 if [ $# -ne 1 ]; then
   echo "Usage: ./install_k8s_master.sh CONFIGURATIONFILE"
@@ -100,28 +123,9 @@ EOF
       --api-servers=$API_SERVERS \
       --etcd-servers=$ETCD_ENDPOINTS
 
-  cat << EOF > /tmp/apiserver-add.txt
-        - --etcd-cafile=/etc/etcd-ssl/ca_cert.pem
-        - --etcd-certfile=/etc/etcd-ssl/client_cert.pem
-        - --etcd-keyfile=/etc/etcd-ssl/client_key_insecure.pem
-EOF
-  sed -i '/-\ --etcd-servers=/r /tmp/apiserver-add.txt' /home/core/assets/manifests/kube-apiserver.yaml
-
-  cat << EOF > /tmp/apiserver-add.txt
-      - name: ssl-certs-etcd
-        hostPath:
-          path: /usr/ssl/certs/etcd
-EOF
-  sed -i '/volumes:/r /tmp/apiserver-add.txt' /home/core/assets/manifests/kube-apiserver.yaml
-      
-  cat << EOF > /tmp/apiserver-add.txt
-        - mountPath: /etc/etcd-ssl
-          name: ssl-certs-etcd
-          readOnly: true
-EOF
-  sed -i '/volumeMounts:/r /tmp/apiserver-add.txt' /home/core/assets/manifests/kube-apiserver.yaml
-      
   sudo chown -R core:core /home/core/assets
+  
+  patchApiServerManifest
 
   sudo rm -rf /etc/kubernetes; true
   sudo mkdir -p /etc/kubernetes
