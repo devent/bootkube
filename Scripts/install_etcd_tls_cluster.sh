@@ -39,12 +39,12 @@ EOF
 # Install etcd-member service on all three nodes
 #
 function install_etcd_nodes() {
+  rm -rf /home/core/.etcd_private; true
+  git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private
   for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
   #for node in 0 1 2;do
   echo "etcd for node "$node
   configure_etcd $node
-  rm -rf /home/core/.etcd_private; true
-  git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private
   scp -r /home/core/.etcd_private ${ETCDIPS[$node]}:/tmp/
   scp /home/core/10-etcd-member.conf ${ETCDIPS[$node]}:/tmp/
   ssh ${ETCDIPS[$node]} '\
