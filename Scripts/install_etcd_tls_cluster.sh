@@ -43,9 +43,15 @@ function install_etcd_nodes() {
   #for node in 0 1 2;do
   echo "etcd for node "$node
   configure_etcd $node
-  ssh ${ETCDIPS[$node]} "rm -rf /home/core/.etcd_private; git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private"
+  rm -rf /home/core/.etcd_private; true
+  git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private
+  scp -r /home/core/.etcd_private ${ETCDIPS[$node]}:/tmp/
   scp /home/core/10-etcd-member.conf ${ETCDIPS[$node]}:/tmp/
-  ssh ${ETCDIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
+  ssh ${ETCDIPS[$node]} '\
+  sudo cp /tmp/.etcd_private/etcd /etc/ssl/certs; \
+  sudo systemctl stop etcd-member; \
+  if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; \
+  sudo mkdir /etc/systemd/system/etcd-member.service.d'
   ssh ${ETCDIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
   ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
   done
