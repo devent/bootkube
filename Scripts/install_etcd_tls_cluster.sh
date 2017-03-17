@@ -75,6 +75,7 @@ export ETCDCTL_CERT=/etc/ssl/certs/etcd/client_cert.pem
 export ETCDCTL_KEY=/etc/ssl/certs/etcd/client_key_insecure.pem
 
 EOF
+  fi
 }
 
 if [ $# -ne 1 ]; then
