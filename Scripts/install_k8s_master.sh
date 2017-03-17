@@ -1,6 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
+#
+# Changes the work directory to the script base directory.
+#
+function changeWorkDir() {
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  cd "$DIR"
+}
+
 function configure_kubelet() {
 
   echo "Creating kubelet.service for "$1
@@ -55,9 +63,8 @@ if [ $# -ne 1 ]; then
 fi
 
 source $1
-IFS=',' read -r -a PRIPS <<< "$API_PRIVATE_IPS"
-IFS=',' read -r -a PUIPS <<< "$API_PUBLIC_IPS"
-IFS=',' read -r -a ETCDIPS <<< "$ETCD_IP"
+
+changeWorkDir
 
 # We are on node1 and the first installation step takes place locally
 
@@ -67,9 +74,7 @@ if [ ! -f /home/core/.k8s_installed ]; then
   # Prerequisites - Installation of etcdctl and kubectl in /home/core/bin
   echo "Checking for prerequisites ..."
 
-  if [ ! -d "/home/core/bin" ]; then
-    mkdir -p /home/core/bin
-  fi
+  mkdir -p /home/core/bin; true
 
   curl https://storage.googleapis.com/kubernetes-release/release/v1.5.4/bin/linux/amd64/kubectl > /home/core/bin/kubectl
   chmod +x /home/core/bin/kubectl
@@ -81,39 +86,23 @@ cat << EOF > /home/core/bin/environment.txt
 
 EOF
   
-  if [ -d "/home/core/assets" ]; then
-    rm -rf /home/core/assets
-  fi
+  rm -rf /home/core/assets; true
 
   # Use Bootkube to create the relevant assets
   echo "Calling bootkube render to create K8s assets"
 
-  if [ ${#PRIPS[@]} -eq 1 ];then
-    sudo /usr/bin/rkt run \
+  sudo /usr/bin/rkt run \
       --volume home,kind=host,source=/home/core \
       --mount volume=home,target=/core \
       --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
       --exec /bootkube -- render \
       --asset-dir=/core/assets \
-      --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443 \
-      --etcd-servers=http://${ETCDIPS[0]}:2379
-  else
-    sudo /usr/bin/rkt run \
-      --volume home,kind=host,source=/home/core \
-      --mount volume=home,target=/core \
-      --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
-      --exec /bootkube -- render \
-      --asset-dir=/core/assets \
-      --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443,https://${PRIPS[1]}:443,https://${PUIPS[1]}:443,https://${PRIPS[2]}:443,https://${PUIPS[2]}:443 \
-      --etcd-servers=http://${ETCDIPS[0]}:2379,http://${ETCDIPS[1]}:2379,http://${ETCDIPS[2]}:2379
-  fi
+      --api-servers=$API_SERVERS \
+      --etcd-servers=$ETCD_ENDPOINTS
 
   sudo chown -R core:core /home/core/assets
 
-  if [ -d "/etc/kubernetes" ]; then
-    sudo rm -rf /etc/kubernetes
-  fi
-
+  sudo rm -rf /etc/kubernetes; true
   sudo mkdir -p /etc/kubernetes
 
   #sudo cp /home/core/assets/auth/bootstrap-kubeconfig /etc/kubernetes/
@@ -157,14 +146,29 @@ if [ ${#PRIPS[@]} -ne 1 ];then
 
   for node in `seq 2`; do
 
-    if [ `ssh ${PRIPS[$node]} 'if [ ! -f /home/core/.k8s_installed ]; then echo "not_installed"; fi'` ]; then
+    is_installed=$(ssh ${PRIPS[$node]} 'if [ ! -f /home/core/.k8s_installed ]; then echo "not_installed"; else echo "installed"; fi')
+    ret=$?
+    if [[ $ret == 255 ]]; then
+      echo "Error $ret, exit."
+      exit $ret
+    fi
+    
+    if [[ "$is_installed" != "installed" ]]; then
       echo "Starting to install node"$node ${PRIPS[$node]}
 
       # node will be installed as second master
       # first we copy the necessary files to node2
-      ssh ${PRIPS[$node]} 'if [ -d /home/core/assets ]; then rm -rf /home/core/assets; mkdir -p /home/core/assets/auth; fi' 
-      ssh ${PRIPS[$node]} 'if [ -d /home/core/bin ]; then rm -rf /home/core/bin; fi'
-      ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then sudo rm -r /etc/kubernetes/*;else sudo mkdir /etc/kubernetes; fi'
+      ssh ${PRIPS[$node]} 'if [ -d /home/core/assets ]; then \
+      rm -rf /home/core/assets; \
+      mkdir -p /home/core/assets/auth; \
+      fi' 
+      ssh ${PRIPS[$node]} 'if [ -d /home/core/bin ]; then \
+      rm -rf /home/core/bin; \
+      fi'
+      ssh ${PRIPS[$node]} 'if [ -d /etc/kubernetes ]; then \
+      sudo rm -r /etc/kubernetes/*; \
+      else sudo mkdir /etc/kubernetes; \
+      fi'
 
       scp -r /home/core/assets core@${PRIPS[$node]}:
       scp -r /home/core/bin core@${PRIPS[$node]}:
@@ -180,7 +184,7 @@ if [ ${#PRIPS[@]} -ne 1 ];then
       ssh ${PRIPS[$node]} 'sudo cp /home/core/assets/kubelet.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable kubelet; sudo systemctl start kubelet'
       echo "Give kubelet some time ..."
       sleep 30
-      ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
+      ssh ${PRIPS[$node]} "sudo /usr/bin/rkt run --trust-keys-from-https --volume home,kind=host,source=/home/core --mount volume=home,target=/core --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION --exec /bootkube -- start --asset-dir=/core/assets"
 
       while [ `/home/core/bin/kubectl --kubeconfig=/home/core/assets/auth/kubeconfig get pods -n=kube-system | grep -v \^NAME | awk '{print $3}' | grep Running | wc -l` != $((10+$node*5)) ]; do
         sleep 5

@@ -1,20 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# Configuration
-BOOTKUBE_REPO=${BOOTKUBE_REPO:-quay.io/coreos/bootkube}
-BOOTKUBE_VERSION=${BOOTKUBE_VERSION:-v0.3.8}
-INSTALL_ETCD=yes
-ETCD_VER=v3.1.1
-echo "ETCD_VER " $ETCD_VER
-# Private IP addresses of API servers
-#declare -a PRIPS=("10.104.12.81", "10.104.12.89", "10.105.23.110", "10.105.23.107", "10.105.23.15")
-declare -a PRIPS=("10.104.12.81", "10.104.12.89", "10.105.23.110") #, "10.105.23.107", "10.105.23.15")
-# Public IP addresses of API Servers
-declare -a PUIPS=("159.8.58.82", "159.8.58.67", "159.8.58.79" )
-# IP addresses of etcd nodes
-declare -a ETCDIPS=("10.104.100.236" "10.104.100.245" "10.104.100.239")
-
 function configure_etcd() {
 
   echo "Creating etc.service for node"$1
@@ -23,11 +9,11 @@ function configure_etcd() {
 [Service]
 Environment="ETCD_IMAGE_TAG=$ETCD_VER"
 Environment="ETCD_NAME=node$1"
-Environment="ETCD_INITIAL_CLUSTER=node0=http://${PRIPS[0]}:2380,node1=http://${PRIPS[1]}:2380,node2=http://${PRIPS[2]}:2380"
-Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${PRIPS[$1]}:2380"
-Environment="ETCD_ADVERTISE_CLIENT_URLS=http://${PRIPS[$1]}:2379"
-Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
-Environment="ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
+Environment="ETCD_INITIAL_CLUSTER="$ETCD_CLUSTER"
+Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=$ETCD_PROTO://${PRIPS[$1]}:2380"
+Environment="ETCD_ADVERTISE_CLIENT_URLS=$ETCD_PROTO://${PRIPS[$1]}:2379"
+Environment="ETCD_LISTEN_CLIENT_URLS=$ETCD_PROTO://0.0.0.0:2379"
+Environment="ETCD_LISTEN_PEER_URLS=$ETCD_PROTO://0.0.0.0:2380"
 
 EOF
 }
@@ -75,6 +61,13 @@ WantedBy=multi-user.target
 
 EOF
 }
+
+if [ $# -ne 1 ]; then
+  echo "Usage: ./`basename $0` CONFIGURATIONFILE"
+  exit -1
+fi
+
+source $1
 
 # We are on node1 and the first installation step takes place locally
 
@@ -131,8 +124,8 @@ EOF
     --trust-keys-from-https --net=host $BOOTKUBE_REPO:$BOOTKUBE_VERSION \
     --exec /bootkube -- render \
     --asset-dir=/core/assets \
-    --api-servers=https://${PRIPS[0]}:443,https://${PUIPS[0]}:443,https://${PRIPS[1]}:443,https://${PUIPS[1]}:443,https://${PRIPS[2]}:443,https://${PUIPS[2]}:443 \
-    --etcd-servers=http://${ETCDIPS[0]}:2379,http://${ETCDIPS[1]}:2379,http://${ETCDIPS[2]}:2379
+    --api-servers=$API_SERVERS \
+    --etcd-servers=$ETCD_ENDPOINTS
 
   sudo chown -R core:core /home/core/assets
 

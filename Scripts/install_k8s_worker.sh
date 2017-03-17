@@ -1,6 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
+#
+# Changes the work directory to the script base directory.
+#
+function changeWorkDir() {
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  cd "$DIR"
+}
+
 function configure_kubelet() {
 
   echo "Creating kubelet.service for "$1
@@ -45,13 +53,14 @@ WantedBy=multi-user.target
 EOF
 }
 
-
 if [ $# -ne 1 ]; then
   echo "Usage: ./install_k8s_worker.sh CONFIGURATIONFILE"
   exit -1
 fi
 
 source $1
+
+changeWorkDir
 
 ssh $WORKER_IP 'if [ ! -d /etc/kubernetes ];then sudo mkdir /etc/kubernetes;fi'
 scp /home/core/assets/auth/kubeconfig $WORKER_IP:/home/core
