@@ -67,7 +67,7 @@ EOF
   cat << EOF > /tmp/apiserver-add.txt
       - name: ssl-certs-etcd
         hostPath:
-          path: /usr/ssl/certs/etcd
+          path: /etc/ssl/certs/etcd
 EOF
   sed -i '/volumes:/r /tmp/apiserver-add.txt' /home/core/assets/manifests/kube-apiserver.yaml
       
