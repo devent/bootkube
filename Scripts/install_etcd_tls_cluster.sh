@@ -48,7 +48,7 @@ function install_etcd_nodes() {
   scp -r /home/core/.etcd_private/etcd ${ETCDIPS[$node]}:/tmp/
   scp /home/core/10-etcd-member.conf ${ETCDIPS[$node]}:/tmp/
   ssh ${ETCDIPS[$node]} '\
-  sudo cp /tmp/etcd /etc/ssl/certs; \
+  sudo cp -r /tmp/etcd /etc/ssl/certs; \
   rm -rf /tmp/etcd; \
   sudo systemctl stop etcd-member; \
   if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; \
