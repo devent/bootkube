@@ -44,19 +44,15 @@ function cleanup_private() {
 #
 function install_etcd_nodes() {
   cleanup_private; true
-  git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private
-  for (( node=0; node<${#ETCDIPS[@]}; node++ ));do
   #for node in 0 1 2;do
   echo "etcd for node "$node
-  configure_etcd $node 
-  scp -r /home/core/.etcd_private/etcd $ETCD_NODE_USER@${ETCDIPS[$node]}:/tmp/
-  scp /home/core/10-etcd-member.conf $ETCD_NODE_USER@${ETCDIPS[$node]}:/tmp/
-  ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
-  ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
-  ssh $ETCD_NODE_USER@${ETCDIPS[$node]} 'sudo rm -rf /etc/ssl/certs/etcd.old; sudo mv /etc/ssl/certs/etcd /etc/ssl/certs/etcd.old; sudo mv /tmp/etcd /etc/ssl/certs'
+  configure_etcd $node
+  ssh ${ETCDIPS[$node]} "git clone $GIT_PRIVATE_BRANCH $GIT_PRIVATE_REPO /home/core/.etcd_private"
+  scp /home/core/10-etcd-member.conf ${ETCDIPS[$node]}:/tmp/
+  ssh ${ETCDIPS[$node]} 'sudo systemctl stop etcd-member; if [ -d /etc/systemd/system/etcd-member.service.d ];then sudo rm -rf /etc/systemd/system/etcd-member.service.d; fi; sudo mkdir /etc/systemd/system/etcd-member.service.d'
+  ssh ${ETCDIPS[$node]} 'sudo rm -rf /var/lib/etcd/*; sudo mv /tmp/10-etcd-member.conf /etc/systemd/system/etcd-member.service.d/; sudo systemctl daemon-reload; sudo systemctl enable etcd-member'
   ./start_etcd_member_on_node.sh ${ETCDIPS[$node]} &
   done
-  cleanup_private
 }
 
 #
@@ -65,14 +61,14 @@ function install_etcd_nodes() {
 function install_etcdctl() {
   echo "Install etcdctl v3"
 
-  if [ ! -f "/home/core/bin/etcdctl" ]; then
+  if [ ! -d "/home/core/bin" ]; then
     mkdir -p /home/core/bin
+
     DOWNLOAD_URL=https://github.com/coreos/etcd/releases/download
     curl -L ${DOWNLOAD_URL}/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz
     mkdir -p /tmp/test-etcd && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/test-etcd --strip-components=1
     cp /tmp/test-etcd/etcdctl /home/core/bin
-  fi
-  
+
   cat << EOF > /home/core/bin/environment.txt
 export PATH=$PATH:/home/core/bin
 export ETCDCTL_API=3

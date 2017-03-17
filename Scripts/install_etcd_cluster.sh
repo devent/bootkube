@@ -77,13 +77,14 @@ source $1
 
 changeWorkDir
 install_etcd_nodes
+install_etcdctl
 
 for i in `seq 10`; do
  echo "Waiting .."
  sleep 3
 done
 
-install_etcdctl
-
 echo "Installation of etcd done"
-ETCDCTL_API=3 /home/core/bin/etcdctl member list
+
+source /home/core/bin/environment.txt
+/home/core/bin/etcdctl member list
