@@ -22,6 +22,8 @@ function configure_elasticsearch() {
 network.host: 0.0.0.0
 discovery.zen.ping.unicast.hosts: [$EL_ENDPOINTS]
 node.name: $name
+network.publish_host: "$ip"
+network.bind_host: "$ip"
 
 cluster:
   name: "$EL_CLUSTER_NAME"
