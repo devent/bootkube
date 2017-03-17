@@ -64,13 +64,15 @@ function install_etcd_nodes() {
 function install_etcdctl() {
   echo "Install etcdctl v3"
 
-  if [ ! -d "/home/core/bin" ]; then
+  if [ ! -f "/home/core/bin/etcdctl" ]; then
     mkdir -p /home/core/bin
 
     DOWNLOAD_URL=https://github.com/coreos/etcd/releases/download
     curl -L ${DOWNLOAD_URL}/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz
     mkdir -p /tmp/test-etcd && tar xzvf /tmp/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -C /tmp/test-etcd --strip-components=1
     cp /tmp/test-etcd/etcdctl /home/core/bin
+
+  fi
 
   cat << EOF > /home/core/bin/environment.txt
 export PATH=$PATH:/home/core/bin
@@ -82,7 +84,6 @@ export ETCDCTL_CERT=/etc/ssl/certs/etcd/client_cert.pem
 export ETCDCTL_KEY=/etc/ssl/certs/etcd/client_key_insecure.pem
 
 EOF
-  fi
 }
 
 if [ $# -ne 1 ]; then
